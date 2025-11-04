@@ -3242,12 +3242,124 @@ const TERRAINS = {
 
         function updateHexTopBar() {
             const actions = document.getElementById('topbarActions');
-            actions.innerHTML = `
-                <button class="btn btn-secondary" onclick="importHexMap()">📥 Import World</button>
-                <button class="btn btn-secondary" onclick="exportHexMap()">💾 Export World</button>
-                <button class="btn btn-danger" onclick="clearHexMap()">Clear Map</button>
-            `;
+            // Keep empty or add other action buttons here later
+            actions.innerHTML = ``;
         }
+
+        // ============================================================================
+        // DROPDOWN MENU SYSTEM
+        // ============================================================================
+        
+        function toggleMenu(menuId) {
+            const menu = document.getElementById(menuId);
+            const button = menu.previousElementSibling;
+            const isOpen = menu.classList.contains('show');
+            
+            // Close all menus first
+            closeAllMenus();
+            
+            // Toggle current menu
+            if (!isOpen) {
+                menu.classList.add('show');
+                button.classList.add('active');
+            }
+        }
+        
+        function closeAllMenus() {
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.classList.remove('show');
+            });
+            document.querySelectorAll('.menu-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+        }
+        
+        // Close menus when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.menu-item')) {
+                closeAllMenus();
+            }
+        });
+        
+        // New Map function
+        function newMap() {
+            closeAllMenus();
+            if (confirm('Create a new map? Your current map will be saved to cache, but any unsaved exports will be lost.')) {
+                clearCache();
+                state.hexMap.hexes.clear();
+                state.hexMap.landmarks.clear();
+                state.hexMap.tokens.clear();
+                state.hexMap.paths = [];
+                state.hexMap.selectedHex = null;
+                state.hexMap.selectedLandmark = null;
+                state.hexMap.selectedToken = null;
+                state.hexMap.currentPath = null;
+                createStarterMap();
+                autoSaveToCache();
+            }
+        }
+        
+        // Clear Selection function
+        function clearSelection() {
+            deselectHex();
+            state.hexMap.selectedToken = null;
+            state.hexMap.selectedLandmark = null;
+            state.hexMap.selectedPath = null;
+            state.hexMap.currentPath = null;
+            renderHex();
+        }
+        
+        // Reset Zoom function
+        function resetZoom() {
+            state.hexMap.viewport.scale = 1;
+            state.hexMap.viewport.offsetX = 0;
+            state.hexMap.viewport.offsetY = 0;
+            document.getElementById('zoomLevel').textContent = '100%';
+            renderHex();
+        }
+        
+        // Toggle All Layers
+        function toggleAllLayers(show) {
+            state.hexMap.showTerrain = show;
+            state.hexMap.showGrid = show;
+            state.hexMap.showCoords = show;
+            state.hexMap.showLandmarks = show;
+            state.hexMap.showTokens = show;
+            state.hexMap.showPaths = show;
+            
+            // Update checkboxes
+            const checkboxes = document.querySelectorAll('.layer-item input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = show);
+            
+            renderHex();
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + N - New Map
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                newMap();
+            }
+            // Ctrl/Cmd + O - Import
+            if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
+                e.preventDefault();
+                importHexMap();
+            }
+            // Ctrl/Cmd + S - Export
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                exportHexMap();
+            }
+            // Escape - Clear Selection
+            if (e.key === 'Escape') {
+                clearSelection();
+            }
+            // 0 - Reset Zoom
+            if (e.key === '0' && !e.ctrlKey && !e.metaKey) {
+                resetZoom();
+            }
+        });
 
         function resizeCanvas() {
             canvas.width = canvas.parentElement.offsetWidth;
