@@ -277,14 +277,16 @@ function setHex(q, r, terrain) {
     updateHexCount();
     markUnsaved();
     
-    // Smart bounds update: only refresh minimap if bounds changed
+    // Smart bounds update: only update bounds cache if this is a new hex that expands bounds
     if (isNewHex) {
         const expandedBounds = wouldExpandBounds(q, r);
         if (expandedBounds) {
             updateBoundsForNewHex(q, r);
-            refreshMinimapDebounced();
         }
     }
+    
+    // Always refresh minimap to show terrain changes (uses cached bounds if they didn't change)
+    refreshMinimapDebounced();
 }
 
 function deleteHex(q, r) {
@@ -557,13 +559,13 @@ function showPathDetails(path) {
     };
     
     const editModeButton = state.hexMap.pathEditMode 
-        ? '<button class="btn btn-primary" style="width: 100%;" onclick="togglePathEditMode()">✓ Done Editing</button>'
-        : '<button class="btn btn-secondary" style="width: 100%;" onclick="togglePathEditMode()">✏️ Edit Points</button>';
+        ? '<button class="btn btn-primary" style="width: 100%;" onclick="togglePathEditMode()">âœ“ Done Editing</button>'
+        : '<button class="btn btn-secondary" style="width: 100%;" onclick="togglePathEditMode()">âœï¸ Edit Points</button>';
     
     panel.innerHTML = `
         <div class="details-header">
             <h2>${pathTypeNames[path.type]} Path</h2>
-            <div class="coords">${path.points.length} waypoints · ${path.style} style</div>
+            <div class="coords">${path.points.length} waypoints Â· ${path.style} style</div>
         </div>
         <div class="details-content">
             <div class="form-group">
@@ -580,8 +582,8 @@ function showPathDetails(path) {
             <div class="form-group">
                 <label class="form-label">Path Style</label>
                 <select class="form-select" onchange="updatePathStyleField('${path.id}', this.value)">
-                    <option value="straight" ${path.style === 'straight' ? 'selected' : ''}>━ Straight</option>
-                    <option value="curved" ${path.style === 'curved' ? 'selected' : ''}>⌢ Curved</option>
+                    <option value="straight" ${path.style === 'straight' ? 'selected' : ''}>â” Straight</option>
+                    <option value="curved" ${path.style === 'curved' ? 'selected' : ''}>âŒ¢ Curved</option>
                 </select>
             </div>
             <div class="form-group">
@@ -603,10 +605,10 @@ function showPathDetails(path) {
                 <div style="max-height: 200px; overflow-y: auto; background: #2d3748; border-radius: 6px; padding: 8px;">
                     ${path.points.map((p, i) => `
                         <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; font-size: 12px; color: #e1e8ed; border-bottom: 1px solid #3d4758; background: #2d3748; border-radius: 4px; margin-bottom: 4px;">
-                            <span>${i === 0 ? '🟢' : i === path.points.length - 1 ? '🔴' : '🔵'} Point ${i + 1}: (${p.q}, ${p.r})</span>
+                            <span>${i === 0 ? 'ðŸŸ¢' : i === path.points.length - 1 ? 'ðŸ”´' : 'ðŸ”µ'} Point ${i + 1}: (${p.q}, ${p.r})</span>
                             <div style="display: flex; gap: 4px;">
                                 ${i < path.points.length - 1 ? `<button onclick="insertPointAfter('${path.id}', ${i})" style="padding: 2px 6px; font-size: 10px; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer;" title="Add point after">+</button>` : ''}
-                                ${path.points.length > 2 ? `<button onclick="deletePathPoint('${path.id}', ${i})" style="padding: 2px 6px; font-size: 10px; background: #f56565; color: white; border: none; border-radius: 3px; cursor: pointer;" title="Delete point">×</button>` : ''}
+                                ${path.points.length > 2 ? `<button onclick="deletePathPoint('${path.id}', ${i})" style="padding: 2px 6px; font-size: 10px; background: #f56565; color: white; border: none; border-radius: 3px; cursor: pointer;" title="Delete point">Ã—</button>` : ''}
                             </div>
                         </div>
                     `).join('')}
@@ -623,7 +625,7 @@ function showPathDetails(path) {
                                     style="width: 100%; padding: 8px; margin-bottom: 4px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; text-align: left;"
                                     onmouseover="this.style.background='#5568d3'" 
                                     onmouseout="this.style.background='#667eea'">
-                                ✂️ Split at Point ${i + 1} (${p.q}, ${p.r})
+                                âœ‚ï¸ Split at Point ${i + 1} (${p.q}, ${p.r})
                             </button>
                         `;
                     }).join('')}
@@ -632,8 +634,8 @@ function showPathDetails(path) {
             <div style="font-size: 11px; color: #718096; line-height: 1.5; padding: 12px; background: #2d3748; border-radius: 6px;">
                 <strong>${state.hexMap.pathEditMode ? 'Edit Mode Tips:' : 'Path Info:'}</strong><br>
                 ${state.hexMap.pathEditMode ? 
-                    '• Drag points on the map to move them<br>• Click + to add points between segments<br>• Click × to remove points<br>• Double-click path line to insert point' :
-                    '• Click "Edit Points" to modify path<br>• Use + buttons to add waypoints<br>• Split to create Y/T intersections<br>• Double-click path to insert point'
+                    'â€¢ Drag points on the map to move them<br>â€¢ Click + to add points between segments<br>â€¢ Click Ã— to remove points<br>â€¢ Double-click path line to insert point' :
+                    'â€¢ Click "Edit Points" to modify path<br>â€¢ Use + buttons to add waypoints<br>â€¢ Split to create Y/T intersections<br>â€¢ Double-click path to insert point'
                 }
             </div>
         </div>
@@ -1219,17 +1221,17 @@ function showTokenDetails(token) {
                 <span style="display: inline-block; width: 32px; height: 32px; border-radius: 50%; background: ${token.color}; border: 2px solid #000; text-align: center; line-height: 28px; color: white; font-weight: bold; font-size: 14px;">${token.label.charAt(0).toUpperCase()}</span>
                 ${token.name}
             </h2>
-            <div class="coords">${token.type.charAt(0).toUpperCase() + token.type.slice(1)} · Hex (${token.q}, ${token.r})</div>
+            <div class="coords">${token.type.charAt(0).toUpperCase() + token.type.slice(1)} Â· Hex (${token.q}, ${token.r})</div>
         </div>
         <div class="details-content">
             ${hasPathfinding ? `
             <div class="form-group" style="background: #667eea; padding: 12px; border-radius: 8px;">
-                <label class="form-label" style="color: white; margin-bottom: 8px;">🗺️ Pathfinding Active</label>
+                <label class="form-label" style="color: white; margin-bottom: 8px;">ðŸ—ºï¸ Pathfinding Active</label>
                 <button class="btn btn-secondary" style="width: 100%; margin-bottom: 8px;" onclick="selectPathfindingDestination('${token.id}')">
-                    📍 Select Destination Hex
+                    ðŸ“ Select Destination Hex
                 </button>
                 <button class="btn btn-danger" style="width: 100%;" onclick="stopPathfinding('${token.id}')">
-                    ⏹️ Stop Pathfinding
+                    â¹ï¸ Stop Pathfinding
                 </button>
                 ${token.pathfindingRoute ? `<div style="color: white; font-size: 11px; margin-top: 8px;">Route: ${token.pathfindingRoute.length} hexes</div>` : ''}
             </div>
@@ -1267,7 +1269,7 @@ function showTokenDetails(token) {
                 <label class="form-label">Attributes (JSON)</label>
                 <textarea class="form-input" id="tokenAttributes_${token.id}" style="min-height: 120px; font-family: monospace; font-size: 12px;" onchange="updateTokenAttributes('${token.id}', this.value)">${attributesJson}</textarea>
                 <div style="font-size: 11px; color: #718096; margin-top: 4px;">
-                    💡 Set <strong>"pathfinding": true</strong> to enable pathfinding
+                    ðŸ’¡ Set <strong>"pathfinding": true</strong> to enable pathfinding
                 </div>
             </div>
             <div class="form-group">
@@ -1481,7 +1483,7 @@ function showLandmarkDetails(landmark) {
 
         <div class="details-header">
             <h2>${landmark.name}</h2>
-            <div class="coords">Landmark · Hex (${landmark.q}, ${landmark.r})</div>
+            <div class="coords">Landmark Â· Hex (${landmark.q}, ${landmark.r})</div>
         </div>
         <div class="details-content">
             <div class="form-group">
@@ -1606,7 +1608,7 @@ function selectPathfindingDestination(tokenId) {
         state.hexMap.selectedToken = null;
         document.getElementById('hexDetailsPanel').innerHTML = `
             <div class="no-selection">
-                <div class="no-selection-icon">📍</div>
+                <div class="no-selection-icon">ðŸ“</div>
                 <p style="font-size: 16px; font-weight: 600;">Click destination hex</p>
                 <p style="margin-top: 8px; font-size: 12px;">The token will pathfind to this location</p>
                 <button class="btn btn-secondary" style="margin-top: 16px;" onclick="cancelPathfindingSelection()">Cancel</button>
@@ -2353,7 +2355,7 @@ function drawLandmark(landmark) {
             ctx.font = `bold ${landmarkSize * 0.5}px Arial`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('🏛️', x, y);
+            ctx.fillText('ðŸ›ï¸', x, y);
         }
     } else if (landmark.style === 'badge') {
         // Badge style - small corner indicator
@@ -2552,7 +2554,7 @@ function updateUI() {
     // If in Explorer mode, show different instructions
     if (state.hexMap.viewMode === 'explorer') {
         modeText.textContent = 'Explorer Mode';
-        instructionText.textContent = 'Click hexes/tokens/landmarks to view info · Drag tokens to move · Right-click drag to pan';
+        instructionText.textContent = 'Click hexes/tokens/landmarks to view info Â· Drag tokens to move Â· Right-click drag to pan';
         canvas.style.cursor = 'default';
         return;
     }
@@ -2565,12 +2567,12 @@ function updateUI() {
     };
     
     const instructions = {
-        paint: 'Click to paint · Shift+Click to select hex · Drag for continuous painting · Right-click drag to pan',
-        token: state.hexMap.pendingToken ? 'Click a hex to place token · ESC to cancel' : 'Click to place token · Shift+Click token to select · Drag token to move',
-        landmark: state.hexMap.pendingLandmark ? 'Click a hex to place landmark · ESC to cancel' : 'Click to create landmark · Shift+Click landmark to select',
-        path: state.hexMap.pathEditMode ? 'Drag points to move · Click + to insert · Click × to delete · Right-click to pan' : 
-              state.hexMap.currentPath ? 'Click to add waypoints · Double-click to finish · ESC to cancel' : 
-              'Click to draw new path · Shift+Click path to select/edit'
+        paint: 'Click to paint Â· Shift+Click to select hex Â· Drag for continuous painting Â· Right-click drag to pan',
+        token: state.hexMap.pendingToken ? 'Click a hex to place token Â· ESC to cancel' : 'Click to place token Â· Shift+Click token to select Â· Drag token to move',
+        landmark: state.hexMap.pendingLandmark ? 'Click a hex to place landmark Â· ESC to cancel' : 'Click to create landmark Â· Shift+Click landmark to select',
+        path: state.hexMap.pathEditMode ? 'Drag points to move Â· Click + to insert Â· Click Ã— to delete Â· Right-click to pan' : 
+              state.hexMap.currentPath ? 'Click to add waypoints Â· Double-click to finish Â· ESC to cancel' : 
+              'Click to draw new path Â· Shift+Click path to select/edit'
     };
     
     canvas.style.cursor = cursorMap[state.hexMap.mode] || 'default';
@@ -3062,7 +3064,7 @@ function showHexDetails(hex) {
 
         <div class="details-header">
             <h2>${hex.name || 'Unnamed Hex'}</h2>
-            <div class="coords">Hex (${hex.q}, ${hex.r}) · ${TERRAINS[hex.terrain].name}</div>
+            <div class="coords">Hex (${hex.q}, ${hex.r}) Â· ${TERRAINS[hex.terrain].name}</div>
         </div>
         
         <div class="details-content">
@@ -3144,7 +3146,7 @@ function deselectHex() {
         </div>
         
         <div class="no-selection">
-            <div class="no-selection-icon">⬡</div>
+            <div class="no-selection-icon">â¬¡</div>
             <p>Select a hex to view details</p>
             <p style="margin-top: 8px; font-size: 12px;">Click any hex on the map</p>
         </div>
@@ -3768,8 +3770,8 @@ function createStarterMap() {
 function updateHexTopBar() {
     const actions = document.getElementById('topbarActions');
     actions.innerHTML = `
-        <button class="btn btn-secondary" onclick="importHexMap()">📥 Import World</button>
-        <button class="btn btn-secondary" onclick="exportHexMap()">💾 Export World</button>
+        <button class="btn btn-secondary" onclick="importHexMap()">ðŸ“¥ Import World</button>
+        <button class="btn btn-secondary" onclick="exportHexMap()">ðŸ’¾ Export World</button>
         <button class="btn btn-danger" onclick="clearHexMap()">Clear Map</button>
     `;
 }
@@ -4279,7 +4281,7 @@ function createMobileBottomSheet() {
                 </div>
 
                 <div class="mobile-info-card">
-                    <strong style="color: #667eea;">💡 Tip:</strong> Swipe horizontally to see all terrain types. Tap to select, then paint on the map.
+                    <strong style="color: #667eea;">ðŸ’¡ Tip:</strong> Swipe horizontally to see all terrain types. Tap to select, then paint on the map.
                 </div>
             </div>
 
