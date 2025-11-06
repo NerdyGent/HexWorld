@@ -627,3 +627,433 @@ textarea.form-input {
     display: flex;
     gap: 8px;
 }
+
+/* ============================================================================
+   MOBILE RESPONSIVE STYLES
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    /* Hide desktop sidebar */
+    .sidebar-left {
+        display: none;
+    }
+
+    /* Full width canvas */
+    .canvas-container {
+        width: 100%;
+    }
+
+    .sidebar-right {
+        display: none;
+    }
+
+    /* Mobile Top Bar */
+    .topbar {
+        padding: 10px 16px;
+    }
+
+    .topbar-left {
+        gap: 12px;
+    }
+
+    .logo {
+        font-size: 16px;
+    }
+
+    .breadcrumb {
+        font-size: 12px;
+    }
+
+    .topbar-right {
+        gap: 8px;
+    }
+
+    .btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    /* Mobile Canvas Overlay - Cleaner */
+    .canvas-overlay {
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(26, 31, 38, 0.95);
+        backdrop-filter: blur(20px);
+        padding: 8px 16px;
+        border-radius: 20px;
+        border: 1px solid rgba(45, 55, 72, 0.5);
+        font-size: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        width: auto;
+        text-align: center;
+    }
+
+    .canvas-overlay #instructionText {
+        display: none;
+    }
+
+    /* Mobile Zoom Controls - Repositioned */
+    .zoom-controls {
+        bottom: 200px;
+        right: 16px;
+        flex-direction: column;
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .zoom-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+    }
+
+    .zoom-level {
+        font-size: 11px;
+        padding: 8px 4px;
+        min-width: 44px;
+    }
+
+    /* Mobile Bottom Sheet */
+    .mobile-bottom-sheet {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(26, 31, 38, 0.98);
+        backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(45, 55, 72, 0.5);
+        border-radius: 24px 24px 0 0;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+        z-index: 90;
+        flex-direction: column;
+        max-height: 65vh;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .mobile-bottom-sheet.collapsed {
+        transform: translateY(calc(100% - 180px));
+    }
+
+    .mobile-bottom-sheet.expanded {
+        transform: translateY(0);
+    }
+
+    /* Sheet Handle */
+    .mobile-sheet-handle {
+        width: 40px;
+        height: 5px;
+        background: rgba(160, 174, 192, 0.4);
+        border-radius: 3px;
+        margin: 12px auto 8px;
+        cursor: grab;
+        transition: all 0.2s;
+        touch-action: none;
+    }
+
+    .mobile-sheet-handle:active {
+        cursor: grabbing;
+        background: rgba(160, 174, 192, 0.7);
+        width: 50px;
+    }
+
+    /* Mobile Tabs */
+    .mobile-tabs {
+        display: flex;
+        padding: 0 16px;
+        gap: 4px;
+        border-bottom: 1px solid rgba(45, 55, 72, 0.5);
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .mobile-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .mobile-tab {
+        padding: 14px 20px;
+        background: none;
+        border: none;
+        color: #718096;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        white-space: nowrap;
+        transition: all 0.2s;
+    }
+
+    .mobile-tab.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+    }
+
+    /* Mobile Content */
+    .mobile-content {
+        padding: 20px 16px;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    /* Mobile Tool Grid */
+    .mobile-tool-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .mobile-tool-card {
+        aspect-ratio: 1;
+        background: #2d3748;
+        border: 2px solid transparent;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        padding: 10px;
+        position: relative;
+    }
+
+    .mobile-tool-card:active {
+        transform: scale(0.95);
+        background: rgba(102, 126, 234, 0.3);
+    }
+
+    .mobile-tool-card.active {
+        border-color: #667eea;
+        background: rgba(102, 126, 234, 0.2);
+        box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .mobile-tool-card .mode-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .mobile-tool-card .mode-icon svg {
+        width: 100%;
+        height: 100%;
+        fill: #a0aec0;
+    }
+
+    .mobile-tool-card.active .mode-icon svg {
+        fill: #667eea;
+    }
+
+    .mobile-tool-label {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #a0aec0;
+        text-align: center;
+    }
+
+    .mobile-tool-card.active .mobile-tool-label {
+        color: #667eea;
+    }
+
+    /* Mobile Terrain Scroll */
+    .mobile-terrain-scroll {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        padding: 4px 0 16px;
+        scrollbar-width: none;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .mobile-terrain-scroll::-webkit-scrollbar {
+        display: none;
+    }
+
+    .mobile-terrain-card {
+        min-width: 85px;
+        flex-shrink: 0;
+        background: #2d3748;
+        border: 2px solid transparent;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        cursor: pointer;
+        scroll-snap-align: start;
+        transition: all 0.2s;
+        padding: 12px;
+    }
+
+    .mobile-terrain-card:active {
+        transform: scale(0.95);
+    }
+
+    .mobile-terrain-card.active {
+        border-color: #667eea;
+        box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .mobile-terrain-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 4px;
+    }
+
+    .mobile-terrain-icon img {
+        width: 28px;
+        height: 28px;
+    }
+
+    .mobile-terrain-name {
+        font-size: 11px;
+        font-weight: 600;
+        color: #a0aec0;
+        text-align: center;
+    }
+
+    .mobile-terrain-card.active .mobile-terrain-name {
+        color: #667eea;
+    }
+
+    /* Mobile Brush Controls */
+    .mobile-brush-control {
+        background: rgba(45, 55, 72, 0.3);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+    }
+
+    .mobile-brush-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #a0aec0;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .mobile-slider-control {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .mobile-slider-control .slider {
+        flex: 1;
+        height: 6px;
+    }
+
+    .mobile-slider-control .slider::-webkit-slider-thumb {
+        width: 24px;
+        height: 24px;
+    }
+
+    .mobile-slider-control .slider-value {
+        min-width: 36px;
+        background: rgba(102, 126, 234, 0.2);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    /* Mobile Section Header */
+    .mobile-section-header {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #667eea;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .mobile-section-header::before {
+        content: '';
+        width: 3px;
+        height: 14px;
+        background: #667eea;
+        border-radius: 2px;
+    }
+
+    /* Mobile Info Card */
+    .mobile-info-card {
+        background: rgba(102, 126, 234, 0.1);
+        border: 1px solid rgba(102, 126, 234, 0.3);
+        border-radius: 10px;
+        padding: 12px;
+        margin-top: 12px;
+        font-size: 11px;
+        line-height: 1.6;
+        color: #a0aec0;
+    }
+
+    /* Hide desktop-only elements */
+    .minimap-container {
+        display: none;
+    }
+
+    /* Mobile Minimap - Floating */
+    .mobile-minimap-float {
+        position: fixed;
+        bottom: 200px;
+        left: 16px;
+        width: 100px;
+        height: 100px;
+        background: rgba(26, 31, 38, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 16px;
+        border: 1px solid rgba(45, 55, 72, 0.5);
+        overflow: hidden;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 80;
+        display: block;
+    }
+
+    .mobile-minimap-float canvas {
+        width: 100%;
+        height: 100%;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    /* Larger touch targets */
+    .btn {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    .mode-btn,
+    .terrain-btn {
+        min-height: 44px;
+    }
+
+    /* Remove hover effects on touch devices */
+    .btn:hover,
+    .mode-btn:hover,
+    .terrain-btn:hover {
+        transform: none;
+    }
+
+    /* Add active states for touch feedback */
+    .btn:active,
+    .mode-btn:active,
+    .terrain-btn:active {
+        transform: scale(0.95);
+    }
+}

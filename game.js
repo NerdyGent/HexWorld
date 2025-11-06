@@ -4074,3 +4074,369 @@ async function init() {
 }
 
 init();
+// ============================================================================
+// MOBILE RESPONSIVE SYSTEM
+// ============================================================================
+
+let isMobile = false;
+let mobileState = {
+    sheetExpanded: false,
+    currentTab: 'tools',
+    touchStartY: 0,
+    touchCurrentY: 0
+};
+
+function detectMobile() {
+    isMobile = window.innerWidth <= 768 || 
+               ('ontouchstart' in window) || 
+               (navigator.maxTouchPoints > 0);
+    return isMobile;
+}
+
+function initMobileUI() {
+    if (!detectMobile()) return;
+
+    console.log('Mobile device detected - initializing mobile UI');
+
+    // Create mobile bottom sheet
+    createMobileBottomSheet();
+
+    // Create mobile minimap
+    createMobileMinimap();
+
+    // Update canvas overlay for mobile
+    updateMobileOverlay();
+
+    // Set initial mode
+    setHexMode('paint');
+    selectTerrain('plains');
+}
+
+function createMobileBottomSheet() {
+    const main = document.querySelector('.main');
+    
+    const sheet = document.createElement('div');
+    sheet.className = 'mobile-bottom-sheet collapsed';
+    sheet.id = 'mobileBottomSheet';
+    
+    sheet.innerHTML = `
+        <div class="mobile-sheet-handle" id="mobileSheetHandle"></div>
+        
+        <div class="mobile-tabs">
+            <button class="mobile-tab active" data-tab="tools">Tools</button>
+            <button class="mobile-tab" data-tab="terrain">Terrain</button>
+            <button class="mobile-tab" data-tab="brush">Brush</button>
+        </div>
+
+        <div class="mobile-content">
+            <!-- Tools Tab -->
+            <div class="mobile-tab-content" id="mobileToolsTab">
+                <div class="mobile-section-header">Select Tool</div>
+                
+                <div class="mobile-tool-grid">
+                    <div class="mobile-tool-card active" data-mode="paint" onclick="setHexMode('paint')">
+                        <div class="mode-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7,14C5.9,14 5,13.1 5,12C5,10.9 5.9,10 7,10C8.1,10 9,10.9 9,12C9,13.1 8.1,14 7,14M12.6,10C11.8,7.7 9.6,6 7,6C3.7,6 1,8.7 1,12C1,15.3 3.7,18 7,18C9.6,18 11.8,16.3 12.6,14H16V18H20V14H23V10H12.6Z"/>
+                            </svg>
+                        </div>
+                        <span class="mobile-tool-label">Paint</span>
+                    </div>
+                    <div class="mobile-tool-card" data-mode="select" onclick="setHexMode('select')">
+                        <div class="mode-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12,2C17.53,2 22,6.47 22,12C22,17.53 17.53,22 12,22C6.47,22 2,17.53 2,12C2,6.47 6.47,2 12,2M15.59,7L12,10.59L8.41,7L7,8.41L10.59,12L7,15.59L8.41,17L12,13.41L15.59,17L17,15.59L13.41,12L17,8.41L15.59,7Z"/>
+                            </svg>
+                        </div>
+                        <span class="mobile-tool-label">Select</span>
+                    </div>
+                    <div class="mobile-tool-card" data-mode="path" onclick="setHexMode('path')">
+                        <div class="mode-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M14,16.94L8.58,11.5L14,6.06L15.06,7.12L11.18,11L19,11V13H11.18L15.06,16.88L14,16.94M2,11V13H8V11H2Z"/>
+                            </svg>
+                        </div>
+                        <span class="mobile-tool-label">Path</span>
+                    </div>
+                    <div class="mobile-tool-card" data-mode="token" onclick="setHexMode('token')">
+                        <div class="mode-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/>
+                            </svg>
+                        </div>
+                        <span class="mobile-tool-label">Token</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terrain Tab -->
+            <div class="mobile-tab-content" id="mobileTerrainTab" style="display: none;">
+                <div class="mobile-section-header">Select Terrain</div>
+                
+                <div class="mobile-terrain-scroll" id="mobileTerrainScroll">
+                    <!-- Will be populated dynamically -->
+                </div>
+
+                <div class="mobile-info-card">
+                    <strong style="color: #667eea;">💡 Tip:</strong> Swipe horizontally to see all terrain types. Tap to select, then paint on the map.
+                </div>
+            </div>
+
+            <!-- Brush Tab -->
+            <div class="mobile-tab-content" id="mobileBrushTab" style="display: none;">
+                <div class="mobile-section-header">Brush Settings</div>
+                
+                <div class="mobile-brush-control">
+                    <div class="mobile-brush-label">Brush Size</div>
+                    <div class="mobile-slider-control">
+                        <input type="range" class="slider" min="1" max="5" value="1" 
+                               oninput="updateBrushSize(this.value)">
+                        <span class="slider-value" id="mobileBrushSizeValue">1</span>
+                    </div>
+                </div>
+
+                <div class="mobile-brush-control">
+                    <div class="mobile-brush-label">Paint Speed</div>
+                    <div class="mobile-slider-control">
+                        <input type="range" class="slider" min="1" max="10" value="8" 
+                               oninput="updatePaintSpeed(this.value)">
+                        <span class="slider-value" id="mobilePaintSpeedValue">8</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    main.appendChild(sheet);
+
+    // Populate terrain scroll
+    populateMobileTerrainScroll();
+
+    // Add touch handlers
+    setupMobileSheetHandlers();
+
+    // Add tab switchers
+    setupMobileTabSwitchers();
+}
+
+function populateMobileTerrainScroll() {
+    const scroll = document.getElementById('mobileTerrainScroll');
+    if (!scroll) return;
+
+    Object.entries(TERRAINS).forEach(([key, terrain]) => {
+        const card = document.createElement('div');
+        card.className = `mobile-terrain-card ${key === 'plains' ? 'active' : ''}`;
+        card.dataset.terrain = key;
+        card.onclick = () => {
+            selectTerrain(key);
+            updateMobileTerrainSelection(key);
+        };
+        
+        card.innerHTML = `
+            <div class="mobile-terrain-icon" style="background: ${terrain.color}">
+                <img src="${terrain.icon}" alt="${terrain.name}">
+            </div>
+            <span class="mobile-terrain-name">${terrain.name}</span>
+        `;
+        
+        scroll.appendChild(card);
+    });
+}
+
+function updateMobileTerrainSelection(terrain) {
+    document.querySelectorAll('.mobile-terrain-card').forEach(card => {
+        card.classList.toggle('active', card.dataset.terrain === terrain);
+    });
+}
+
+function setupMobileSheetHandlers() {
+    const handle = document.getElementById('mobileSheetHandle');
+    const sheet = document.getElementById('mobileBottomSheet');
+    
+    if (!handle || !sheet) return;
+
+    let startY = 0;
+    let currentY = 0;
+
+    handle.addEventListener('touchstart', (e) => {
+        startY = e.touches[0].clientY;
+    });
+
+    handle.addEventListener('touchmove', (e) => {
+        currentY = e.touches[0].clientY;
+        const diff = startY - currentY;
+        
+        if (Math.abs(diff) > 10) {
+            if (diff > 0 && !mobileState.sheetExpanded) {
+                expandMobileSheet();
+            } else if (diff < 0 && mobileState.sheetExpanded) {
+                collapseMobileSheet();
+            }
+        }
+    });
+
+    handle.addEventListener('touchend', () => {
+        startY = 0;
+        currentY = 0;
+    });
+
+    // Also allow click/tap to toggle
+    handle.addEventListener('click', toggleMobileSheet);
+}
+
+function setupMobileTabSwitchers() {
+    document.querySelectorAll('.mobile-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabName = tab.dataset.tab;
+            switchMobileTab(tabName);
+        });
+    });
+}
+
+function switchMobileTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.mobile-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.tab === tabName);
+    });
+
+    // Update tab content
+    document.querySelectorAll('.mobile-tab-content').forEach(content => {
+        content.style.display = 'none';
+    });
+    
+    const targetTab = document.getElementById(`mobile${tabName.charAt(0).toUpperCase() + tabName.slice(1)}Tab`);
+    if (targetTab) {
+        targetTab.style.display = 'block';
+    }
+
+    mobileState.currentTab = tabName;
+
+    // Expand sheet when switching tabs
+    if (!mobileState.sheetExpanded) {
+        expandMobileSheet();
+    }
+}
+
+function toggleMobileSheet() {
+    if (mobileState.sheetExpanded) {
+        collapseMobileSheet();
+    } else {
+        expandMobileSheet();
+    }
+}
+
+function expandMobileSheet() {
+    const sheet = document.getElementById('mobileBottomSheet');
+    if (sheet) {
+        sheet.classList.remove('collapsed');
+        sheet.classList.add('expanded');
+        mobileState.sheetExpanded = true;
+    }
+}
+
+function collapseMobileSheet() {
+    const sheet = document.getElementById('mobileBottomSheet');
+    if (sheet) {
+        sheet.classList.remove('expanded');
+        sheet.classList.add('collapsed');
+        mobileState.sheetExpanded = false;
+    }
+}
+
+function createMobileMinimap() {
+    const canvasContainer = document.querySelector('.canvas-container');
+    
+    const minimap = document.createElement('div');
+    minimap.className = 'mobile-minimap-float';
+    minimap.id = 'mobileMinimap';
+    
+    const minimapCanvas = document.createElement('canvas');
+    minimapCanvas.id = 'mobileMinimapCanvas';
+    minimap.appendChild(minimapCanvas);
+    
+    canvasContainer.appendChild(minimap);
+    
+    // Render minimap periodically
+    setInterval(() => {
+        if (isMobile && state.hexMap.hexes.size > 0) {
+            renderMobileMinimap();
+        }
+    }, 1000);
+}
+
+function renderMobileMinimap() {
+    const canvas = document.getElementById('mobileMinimapCanvas');
+    if (!canvas || state.hexMap.hexes.size === 0) return;
+
+    const ctx = canvas.getContext('2d');
+    canvas.width = 100;
+    canvas.height = 100;
+
+    ctx.fillStyle = '#0a0d11';
+    ctx.fillRect(0, 0, 100, 100);
+
+    const bounds = getMapBounds();
+    const scale = getMinimapScale(bounds, 100);
+
+    state.hexMap.hexes.forEach(hex => {
+        const x = ((hex.q * state.hexMap.hexSize * 1.5) - bounds.minX) * scale;
+        const y = (((hex.r * state.hexMap.hexSize * Math.sqrt(3)) + (hex.q * state.hexMap.hexSize * Math.sqrt(3) / 2)) - bounds.minY) * scale;
+        
+        ctx.fillStyle = TERRAINS[hex.terrain].color;
+        ctx.fillRect(Math.floor(x), Math.floor(y), Math.max(2, 3 * scale), Math.max(2, 3 * scale));
+    });
+}
+
+function updateMobileOverlay() {
+    const overlay = document.querySelector('.canvas-overlay');
+    if (overlay && isMobile) {
+        // Simplify overlay for mobile
+        overlay.style.width = 'auto';
+        overlay.style.maxWidth = '80%';
+    }
+}
+
+// Update existing setHexMode to work with mobile
+const originalSetHexMode = setHexMode;
+setHexMode = function(mode) {
+    originalSetHexMode(mode);
+    
+    if (isMobile) {
+        // Update mobile tool cards
+        document.querySelectorAll('.mobile-tool-card').forEach(card => {
+            card.classList.toggle('active', card.dataset.mode === mode);
+        });
+    }
+};
+
+// Initialize mobile UI on load
+window.addEventListener('load', () => {
+    if (detectMobile()) {
+        setTimeout(initMobileUI, 100);
+    }
+});
+
+// Handle orientation changes
+window.addEventListener('orientationchange', () => {
+    setTimeout(() => {
+        resizeCanvas();
+        if (isMobile) {
+            renderMobileMinimap();
+        }
+    }, 100);
+});
+
+// Handle window resize
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        const wasMobile = isMobile;
+        detectMobile();
+        
+        if (wasMobile !== isMobile) {
+            // Device type changed, reload
+            location.reload();
+        }
+    }, 250);
+});
