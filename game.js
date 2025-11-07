@@ -2052,12 +2052,15 @@ function renderHex() {
     }
     
     // Draw landmarks
+    console.log('Rendering landmarks, count:', state.hexMap.landmarks.size);
     state.hexMap.landmarks.forEach(landmark => {
         if (landmark.visible) drawLandmark(landmark);
     });
     
     // Draw tokens
-    state.hexMap.tokens.forEach(token => {
+    console.log('Rendering tokens, count:', state.hexMap.tokens.size);
+    state.hexMap.tokens.forEach((token, key) => {
+        console.log('Token:', key, token.id, 'visible:', token.visible, 'pos:', token.q, token.r);
         if (token.visible) drawToken(token);
     });
     
@@ -2227,8 +2230,25 @@ function drawToken(token) {
     const size = state.hexMap.hexSize * state.hexMap.viewport.scale;
     const tokenSize = size * 0.85 * token.size * token.scale;
     
+    // Debug logging
+    if (token.id === 'token_1') {
+        console.log('Drawing token_1:', {
+            position: { q: token.q, r: token.r },
+            screenPos: { x, y },
+            size: token.size,
+            scale: token.scale,
+            hexSize: size,
+            calculatedTokenSize: tokenSize,
+            visible: token.visible,
+            color: token.color
+        });
+    }
+    
     // Safety check: don't render if too small
-    if (tokenSize <= 0 || size <= 0) return;
+    if (tokenSize <= 0 || size <= 0) {
+        console.log('Token not rendered - size too small:', token.id, 'tokenSize:', tokenSize, 'size:', size);
+        return;
+    }
     
     const radius = Math.max(1, tokenSize / 2); // Ensure minimum radius of 1
     
@@ -4352,10 +4372,10 @@ function importHexMap() {
                         q: landmarkData.q,
                         r: landmarkData.r,
                         name: landmarkData.name,
-                        type: landmarkData.type,
-                        style: landmarkData.style,
-                        icon: landmarkData.icon,
-                        color: landmarkData.color,
+                        type: landmarkData.type || 'location',
+                        style: landmarkData.style || 'circle',
+                        icon: landmarkData.icon || '📍',
+                        color: landmarkData.color || '#ef4444',
                         showLabel: landmarkData.showLabel !== false,
                         labelPosition: landmarkData.labelPosition || 'above',
                         size: landmarkData.size || 1.0,
@@ -4378,14 +4398,14 @@ function importHexMap() {
                         q: tokenData.q,
                         r: tokenData.r,
                         name: tokenData.name,
-                        type: tokenData.type,
-                        color: tokenData.color,
-                        label: tokenData.label,
-                        size: tokenData.size,
+                        type: tokenData.type || 'player',
+                        color: tokenData.color || '#667eea',
+                        label: tokenData.label || tokenData.name,
+                        size: tokenData.size || 1.0,
                         attributes: tokenData.attributes || {},
                         notes: tokenData.notes || '',
                         visible: tokenData.visible !== false,
-                        scale: 1,
+                        scale: tokenData.scale || 1,
                         created: tokenData.created
                     });
                     const idNum = parseInt(tokenData.id.split('_')[1]);
@@ -4416,16 +4436,33 @@ function importHexMap() {
             if (data.viewport) {
                 state.hexMap.viewport = data.viewport;
             }
-               // Force bounds recalculation after import
+            
+            // Force bounds recalculation after import
             state.hexMap.boundsNeedRecalc = true;
             updateHexCount();
             deselectHex();
+            
+            // Multiple render passes to ensure everything draws
             renderHex();
+            
+            // Force another render after a brief delay (fixes race condition)
+            setTimeout(() => {
+                renderHex();
+            }, 10);
+            
+            // And another on next animation frame
+            requestAnimationFrame(() => {
+                renderHex();
+            });
             
             const landmarkCount = data.landmarks ? data.landmarks.length : 0;
             const tokenCount = data.tokens ? data.tokens.length : 0;
             const pathCount = data.paths ? data.paths.length : 0;
-            alert(`World imported successfully!\n\n${data.hexes.length} hexes\n${landmarkCount} landmarks\n${tokenCount} tokens\n${pathCount} paths`);
+            
+            // Alert after render completes
+            setTimeout(() => {
+                alert(`World imported successfully!\n\n${data.hexes.length} hexes\n${landmarkCount} landmarks\n${tokenCount} tokens\n${pathCount} paths`);
+            }, 100);
             
         } catch (error) {
             console.error('Import error:', error);
@@ -6224,46 +6261,172 @@ function openExamplesModal() {
 }
 
 // Load Example Map
-function loadExampleMap(mapType) {
-    if (!confirm('Load this example map? This will replace your current map. Make sure you\'ve saved!')) {
+async function loadExampleMap(mapType) {
+    if (!confirm('Load the Fablewoods example map? This will replace your current map. Make sure you\'ve saved!')) {
         return;
     }
     
-    // Clear current map
-    state.hexMap.hexes.clear();
-    state.hexMap.tokens.clear();
-    state.hexMap.landmarks.clear();
-    state.hexMap.paths = [];
-    
-    // Reset IDs
-    state.nextTokenId = 1;
-    state.nextLandmarkId = 1;
-    state.nextPathId = 1;
-    
-    // Generate example based on type
-    switch(mapType) {
-        case 'island':
-            generateIslandMap();
-            break;
-        case 'dungeon':
-            generateDungeonMap();
-            break;
-        case 'village':
-            generateVillageMap();
-            break;
-        case 'wilderness':
-            generateWildernessMap();
-            break;
+    try {
+        console.log('Attempting to fetch Fablewoods.json...');
+        const response = await fetch('./Fablewoods.json');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        console.log('Fablewoods data loaded successfully');
+        console.log('Tokens in file:', data.tokens ? data.tokens.length : 0);
+        console.log('Landmarks in file:', data.landmarks ? data.landmarks.length : 0);
+        
+        if (!data.hexes || !Array.isArray(data.hexes)) {
+            throw new Error('Invalid world file format - missing hexes');
+        }
+        
+        // Clear current map - EXACT same as importHexMap
+        state.hexMap.hexes.clear();
+        state.hexMap.tokens.clear();
+        state.hexMap.landmarks.clear();
+        state.hexMap.paths = [];
+        state.hexMap.selectedHex = null;
+        state.hexMap.selectedLandmark = null;
+        state.hexMap.selectedToken = null;
+        state.hexMap.currentPath = null;
+        state.hexMap.selectedPath = null;
+        
+        // Import hexes
+        data.hexes.forEach(hexData => {
+            const key = `${hexData.q},${hexData.r}`;
+            state.hexMap.hexes.set(key, {
+                q: hexData.q,
+                r: hexData.r,
+                terrain: hexData.terrain,
+                name: hexData.name || '',
+                description: hexData.description || ''
+            });
+        });
+        
+        // Import landmarks
+        if (data.landmarks && Array.isArray(data.landmarks)) {
+            console.log('Importing', data.landmarks.length, 'landmarks');
+            data.landmarks.forEach(landmarkData => {
+                const key = `${landmarkData.q},${landmarkData.r}`;
+                const landmark = {
+                    id: landmarkData.id,
+                    q: landmarkData.q,
+                    r: landmarkData.r,
+                    name: landmarkData.name,
+                    type: landmarkData.type || 'location',
+                    style: landmarkData.style || 'circle',
+                    icon: landmarkData.icon || '📍',
+                    color: landmarkData.color || '#ef4444',
+                    showLabel: landmarkData.showLabel !== false,
+                    labelPosition: landmarkData.labelPosition || 'above',
+                    size: landmarkData.size || 1.0,
+                    attributes: landmarkData.attributes || {},
+                    notes: landmarkData.notes || '',
+                    visible: landmarkData.visible !== false,
+                    created: landmarkData.created
+                };
+                state.hexMap.landmarks.set(key, landmark);
+                const idNum = parseInt(landmarkData.id.split('_')[1] || '0');
+                if (!isNaN(idNum) && idNum >= state.nextLandmarkId) {
+                    state.nextLandmarkId = idNum + 1;
+                }
+            });
+            console.log('Landmarks after import:', state.hexMap.landmarks.size);
+        }
+        
+        // Import tokens
+        if (data.tokens && Array.isArray(data.tokens)) {
+            console.log('Importing', data.tokens.length, 'tokens');
+            data.tokens.forEach(tokenData => {
+                const token = {
+                    id: tokenData.id,
+                    q: tokenData.q,
+                    r: tokenData.r,
+                    name: tokenData.name,
+                    type: tokenData.type || 'player',
+                    color: tokenData.color || '#667eea',
+                    label: tokenData.label || tokenData.name,
+                    size: tokenData.size || 1.0,
+                    attributes: tokenData.attributes || {},
+                    notes: tokenData.notes || '',
+                    visible: tokenData.visible !== false,
+                    scale: tokenData.scale || 1,
+                    created: tokenData.created
+                };
+                state.hexMap.tokens.set(tokenData.id, token);
+                const idNum = parseInt(tokenData.id.split('_')[1] || '0');
+                if (!isNaN(idNum) && idNum >= state.nextTokenId) {
+                    state.nextTokenId = idNum + 1;
+                }
+            });
+            console.log('Tokens after import:', state.hexMap.tokens.size);
+        }
+        
+        // Import paths
+        if (data.paths && Array.isArray(data.paths)) {
+            data.paths.forEach(pathData => {
+                state.hexMap.paths.push({
+                    id: pathData.id,
+                    type: pathData.type,
+                    style: pathData.style,
+                    width: pathData.width,
+                    color: pathData.color || (PATH_STYLES[pathData.type] ? PATH_STYLES[pathData.type].color : '#8B7355'),
+                    points: pathData.points,
+                    created: pathData.created
+                });
+                const idNum = parseInt(pathData.id.split('_')[1] || '0');
+                if (!isNaN(idNum) && idNum >= state.nextPathId) {
+                    state.nextPathId = idNum + 1;
+                }
+            });
+        }
+        
+        // Set viewport if available
+        if (data.viewport) {
+            state.hexMap.viewport = data.viewport;
+        }
+        
+        // Force bounds recalculation
+        state.hexMap.boundsNeedRecalc = true;
+        updateHexCount();
+        deselectHex();
+        
+        // Close modal first to avoid interference
+        closeModal('examplesModal');
+        
+        // Multiple render passes to ensure everything draws
+        renderHex();
+        
+        setTimeout(() => {
+            renderHex();
+        }, 10);
+        
+        requestAnimationFrame(() => {
+            renderHex();
+        });
+        
+        hasUnsavedChanges = true;
+        saveMapToCache();
+        
+        const landmarkCount = data.landmarks ? data.landmarks.length : 0;
+        const tokenCount = data.tokens ? data.tokens.length : 0;
+        const pathCount = data.paths ? data.paths.length : 0;
+        
+        setTimeout(() => {
+            alert(`Fablewoods loaded successfully!\n\n${data.hexes.length} hexes\n${landmarkCount} landmarks\n${tokenCount} tokens\n${pathCount} paths`);
+        }, 100);
+        
+        console.log(`Loaded Fablewoods: ${data.hexes.length} hexes, ${landmarkCount} landmarks, ${tokenCount} tokens, ${pathCount} paths`);
+        
+    } catch (error) {
+        console.error('Error loading Fablewoods map:', error);
+        closeModal('examplesModal');
+        alert(`Could not load Fablewoods.json automatically.\n\nError: ${error.message}\n\nMake sure Fablewoods.json is in the same folder as index.html.\n\nYou can also use "Import World" to manually select the file.`);
     }
-    
-    render();
-    closeModal('examplesModal');
-    
-    // Mark as unsaved and save
-    hasUnsavedChanges = true;
-    saveMapToCache();
-    
-    console.log('Loaded example map:', mapType);
 }
 
 // Generate Island Map
@@ -6289,22 +6452,49 @@ function generateIslandMap() {
                 }
                 
                 const key = `${q},${r}`;
-                state.hexMap.hexes.set(key, { q, r, terrain });
+                state.hexMap.hexes.set(key, { q, r, terrain, name: '', description: '' });
             }
         }
     }
     
-    // Add a landmark
-    state.hexMap.landmarks.set('example-palm-tree', {
-        id: 'example-palm-tree',
+    // Add a landmark with all required properties
+    const landmarkKey = '2,-1';
+    state.hexMap.landmarks.set(landmarkKey, {
+        id: 'landmark_1',
         name: 'Palm Tree',
         icon: '🌴',
         q: 2,
         r: -1,
         type: 'location',
+        style: 'icon',
+        color: '#10b981',
         showLabel: true,
-        visible: true
+        labelPosition: 'above',
+        size: 1.5,
+        attributes: {},
+        notes: '',
+        visible: true,
+        created: new Date().toISOString()
     });
+    state.nextLandmarkId = 2;
+    
+    // Add a party token
+    state.hexMap.tokens.set('token_1', {
+        id: 'token_1',
+        q: 0,
+        r: 0,
+        name: 'Party',
+        type: 'player',
+        color: '#667eea',
+        label: 'Party',
+        size: 1.2,
+        attributes: {},
+        notes: '',
+        visible: true,
+        scale: 1,
+        created: new Date().toISOString()
+    });
+    state.nextTokenId = 2;
 }
 
 // Generate Dungeon Map
@@ -6321,7 +6511,7 @@ function generateDungeonMap() {
             for (let r = room.r - room.size; r <= room.r + room.size; r++) {
                 if (Math.abs(q - room.q) + Math.abs(r - room.r) <= room.size) {
                     const key = `${q},${r}`;
-                    state.hexMap.hexes.set(key, { q, r, terrain: 'stone' });
+                    state.hexMap.hexes.set(key, { q, r, terrain: 'stone', name: '', description: '' });
                 }
             }
         }
@@ -6345,10 +6535,29 @@ function generateDungeonMap() {
             const r = Math.round(r1 + (r2 - r1) * t);
             const key = `${q},${r}`;
             if (!state.hexMap.hexes.has(key)) {
-                state.hexMap.hexes.set(key, { q, r, terrain: 'stone' });
+                state.hexMap.hexes.set(key, { q, r, terrain: 'stone', name: '', description: '' });
             }
         }
     });
+    
+    // Add a party token at the entrance
+    state.hexMap.tokens.set('token_1', {
+        id: 'token_1',
+        q: 0,
+        r: 0,
+        name: 'Party',
+        type: 'player',
+        color: '#667eea',
+        label: 'Party',
+        size: 1.2,
+        attributes: {},
+        notes: '',
+        visible: true,
+        scale: 1,
+        created: new Date().toISOString()
+    });
+    state.nextTokenId = 2;
+    state.nextLandmarkId = 1;
 }
 
 // Generate Village Map
@@ -6363,7 +6572,7 @@ function generateVillageMap() {
             
             if (distance <= radius) {
                 const key = `${q},${r}`;
-                state.hexMap.hexes.set(key, { q, r, terrain: 'plains' });
+                state.hexMap.hexes.set(key, { q, r, terrain: 'plains', name: '', description: '' });
             }
         }
     }
@@ -6373,31 +6582,61 @@ function generateVillageMap() {
         const key1 = `${i},0`;
         const key2 = `0,${i}`;
         if (state.hexMap.hexes.has(key1)) {
-            state.hexMap.hexes.set(key1, { q: i, r: 0, terrain: 'sand' });
+            state.hexMap.hexes.set(key1, { q: i, r: 0, terrain: 'sand', name: '', description: '' });
         }
         if (state.hexMap.hexes.has(key2)) {
-            state.hexMap.hexes.set(key2, { q: 0, r: i, terrain: 'sand' });
+            state.hexMap.hexes.set(key2, { q: 0, r: i, terrain: 'sand', name: '', description: '' });
         }
     }
     
-    // Add landmarks
+    // Add landmarks with all required properties
     const buildings = [
-        { name: 'Inn', icon: '🏠', q: 3, r: 3 },
-        { name: 'Shop', icon: '🏪', q: -3, r: 3 },
-        { name: 'Church', icon: '⛪', q: 0, r: -4 },
-        { name: 'Well', icon: '🪣', q: 0, r: 0 }
+        { name: 'Inn', icon: '🏠', q: 3, r: 3, color: '#f59e0b' },
+        { name: 'Shop', icon: '🏪', q: -3, r: 3, color: '#10b981' },
+        { name: 'Church', icon: '⛪', q: 0, r: -4, color: '#8b5cf6' },
+        { name: 'Well', icon: '🪣', q: 0, r: 0, color: '#3b82f6' }
     ];
     
     buildings.forEach((building, i) => {
-        const id = `example-building-${i}`;
-        state.hexMap.landmarks.set(id, {
+        const id = `landmark_${i + 1}`;
+        const key = `${building.q},${building.r}`;
+        state.hexMap.landmarks.set(key, {
             id,
-            ...building,
+            name: building.name,
+            icon: building.icon,
+            q: building.q,
+            r: building.r,
             type: 'location',
+            style: 'icon',
+            color: building.color,
             showLabel: true,
-            visible: true
+            labelPosition: 'above',
+            size: 1.5,
+            attributes: {},
+            notes: '',
+            visible: true,
+            created: new Date().toISOString()
         });
     });
+    state.nextLandmarkId = buildings.length + 1;
+    
+    // Add a party token
+    state.hexMap.tokens.set('token_1', {
+        id: 'token_1',
+        q: 1,
+        r: 1,
+        name: 'Party',
+        type: 'player',
+        color: '#667eea',
+        label: 'Party',
+        size: 1.2,
+        attributes: {},
+        notes: '',
+        visible: true,
+        scale: 1,
+        created: new Date().toISOString()
+    });
+    state.nextTokenId = 2;
 }
 
 // Generate Wilderness Map
@@ -6420,7 +6659,7 @@ function generateWildernessMap() {
                 }
                 
                 const key = `${q},${r}`;
-                state.hexMap.hexes.set(key, { q, r, terrain });
+                state.hexMap.hexes.set(key, { q, r, terrain, name: '', description: '' });
             }
         }
     }
@@ -6431,9 +6670,28 @@ function generateWildernessMap() {
         const r = Math.floor(i / 2);
         const key = `${q},${r}`;
         if (state.hexMap.hexes.has(key)) {
-            state.hexMap.hexes.set(key, { q, r, terrain: 'sand' });
+            state.hexMap.hexes.set(key, { q, r, terrain: 'sand', name: '', description: '' });
         }
     }
+    
+    // Add a party token
+    state.hexMap.tokens.set('token_1', {
+        id: 'token_1',
+        q: -6,
+        r: -3,
+        name: 'Party',
+        type: 'player',
+        color: '#667eea',
+        label: 'Party',
+        size: 1.2,
+        attributes: {},
+        notes: '',
+        visible: true,
+        scale: 1,
+        created: new Date().toISOString()
+    });
+    state.nextTokenId = 2;
+    state.nextLandmarkId = 1;
 }
 
 console.log('File menu functionality initialized');
