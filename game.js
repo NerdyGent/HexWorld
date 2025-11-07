@@ -6276,11 +6276,22 @@ async function loadExampleMap(mapType) {
         
         const data = await response.json();
         
-        console.log('Fablewoods data loaded successfully');
+        console.log('JSON parsed successfully');
+        console.log('Data structure check:', {
+            hasHexes: !!data.hexes,
+            hexesIsArray: Array.isArray(data.hexes),
+            hexCount: data.hexes ? data.hexes.length : 0,
+            hasTokens: !!data.tokens,
+            tokenCount: data.tokens ? data.tokens.length : 0,
+            firstFewKeys: Object.keys(data).slice(0, 10)
+        });
+        console.log('First hex sample:', data.hexes ? data.hexes[0] : 'NO HEXES');
         console.log('Tokens in file:', data.tokens ? data.tokens.length : 0);
         console.log('Landmarks in file:', data.landmarks ? data.landmarks.length : 0);
         
         if (!data.hexes || !Array.isArray(data.hexes)) {
+            console.error('VALIDATION FAILED - data.hexes:', data.hexes);
+            console.error('Full data keys:', Object.keys(data));
             throw new Error('Invalid world file format - missing hexes');
         }
         
@@ -6425,7 +6436,159 @@ async function loadExampleMap(mapType) {
     } catch (error) {
         console.error('Error loading Fablewoods map:', error);
         closeModal('examplesModal');
-        alert(`Could not load Fablewoods.json automatically.\n\nError: ${error.message}\n\nMake sure Fablewoods.json is in the same folder as index.html.\n\nYou can also use "Import World" to manually select the file.`);
+        
+        // Automatically open file picker as fallback
+        console.log('Opening file picker as fallback...');
+        
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) {
+                return;
+            }
+            
+            try {
+                console.log('Reading file from picker...');
+                const text = await file.text();
+                const fileData = JSON.parse(text);
+                
+                console.log('File data loaded, has hexes:', !!fileData.hexes, 'count:', fileData.hexes ? fileData.hexes.length : 0);
+                
+                // Use the same import logic
+                if (!fileData.hexes || !Array.isArray(fileData.hexes)) {
+                    throw new Error('Invalid world file format - missing hexes');
+                }
+                
+                // Clear and import (copy from above)
+                state.hexMap.hexes.clear();
+                state.hexMap.tokens.clear();
+                state.hexMap.landmarks.clear();
+                state.hexMap.paths = [];
+                state.hexMap.selectedHex = null;
+                state.hexMap.selectedLandmark = null;
+                state.hexMap.selectedToken = null;
+                state.hexMap.currentPath = null;
+                state.hexMap.selectedPath = null;
+                
+                // Import hexes
+                fileData.hexes.forEach(hexData => {
+                    const key = `${hexData.q},${hexData.r}`;
+                    state.hexMap.hexes.set(key, {
+                        q: hexData.q,
+                        r: hexData.r,
+                        terrain: hexData.terrain,
+                        name: hexData.name || '',
+                        description: hexData.description || ''
+                    });
+                });
+                
+                // Import landmarks
+                if (fileData.landmarks && Array.isArray(fileData.landmarks)) {
+                    fileData.landmarks.forEach(landmarkData => {
+                        const key = `${landmarkData.q},${landmarkData.r}`;
+                        state.hexMap.landmarks.set(key, {
+                            id: landmarkData.id,
+                            q: landmarkData.q,
+                            r: landmarkData.r,
+                            name: landmarkData.name,
+                            type: landmarkData.type || 'location',
+                            style: landmarkData.style || 'circle',
+                            icon: landmarkData.icon || '📍',
+                            color: landmarkData.color || '#ef4444',
+                            showLabel: landmarkData.showLabel !== false,
+                            labelPosition: landmarkData.labelPosition || 'above',
+                            size: landmarkData.size || 1.0,
+                            attributes: landmarkData.attributes || {},
+                            notes: landmarkData.notes || '',
+                            visible: landmarkData.visible !== false,
+                            created: landmarkData.created
+                        });
+                        const idNum = parseInt(landmarkData.id.split('_')[1] || '0');
+                        if (!isNaN(idNum) && idNum >= state.nextLandmarkId) {
+                            state.nextLandmarkId = idNum + 1;
+                        }
+                    });
+                }
+                
+                // Import tokens
+                if (fileData.tokens && Array.isArray(fileData.tokens)) {
+                    fileData.tokens.forEach(tokenData => {
+                        state.hexMap.tokens.set(tokenData.id, {
+                            id: tokenData.id,
+                            q: tokenData.q,
+                            r: tokenData.r,
+                            name: tokenData.name,
+                            type: tokenData.type || 'player',
+                            color: tokenData.color || '#667eea',
+                            label: tokenData.label || tokenData.name,
+                            size: tokenData.size || 1.0,
+                            attributes: tokenData.attributes || {},
+                            notes: tokenData.notes || '',
+                            visible: tokenData.visible !== false,
+                            scale: tokenData.scale || 1,
+                            created: tokenData.created
+                        });
+                        const idNum = parseInt(tokenData.id.split('_')[1] || '0');
+                        if (!isNaN(idNum) && idNum >= state.nextTokenId) {
+                            state.nextTokenId = idNum + 1;
+                        }
+                    });
+                }
+                
+                // Import paths
+                if (fileData.paths && Array.isArray(fileData.paths)) {
+                    fileData.paths.forEach(pathData => {
+                        state.hexMap.paths.push({
+                            id: pathData.id,
+                            type: pathData.type,
+                            style: pathData.style,
+                            width: pathData.width,
+                            color: pathData.color || (PATH_STYLES[pathData.type] ? PATH_STYLES[pathData.type].color : '#8B7355'),
+                            points: pathData.points,
+                            created: pathData.created
+                        });
+                        const idNum = parseInt(pathData.id.split('_')[1] || '0');
+                        if (!isNaN(idNum) && idNum >= state.nextPathId) {
+                            state.nextPathId = idNum + 1;
+                        }
+                    });
+                }
+                
+                // Set viewport
+                if (fileData.viewport) {
+                    state.hexMap.viewport = fileData.viewport;
+                }
+                
+                // Render
+                state.hexMap.boundsNeedRecalc = true;
+                updateHexCount();
+                deselectHex();
+                
+                renderHex();
+                setTimeout(() => renderHex(), 10);
+                requestAnimationFrame(() => renderHex());
+                
+                hasUnsavedChanges = true;
+                saveMapToCache();
+                
+                const landmarkCount = fileData.landmarks ? fileData.landmarks.length : 0;
+                const tokenCount = fileData.tokens ? fileData.tokens.length : 0;
+                const pathCount = fileData.paths ? fileData.paths.length : 0;
+                
+                setTimeout(() => {
+                    alert(`Fablewoods loaded successfully!\n\n${fileData.hexes.length} hexes\n${landmarkCount} landmarks\n${tokenCount} tokens\n${pathCount} paths`);
+                }, 100);
+                
+            } catch (err) {
+                console.error('Error loading from file picker:', err);
+                alert(`Error loading file:\n${err.message}`);
+            }
+        };
+        
+        alert(`Could not load Fablewoods.json automatically.\n\nError: ${error.message}\n\nPlease select Fablewoods.json when the file picker opens.`);
+        input.click();
     }
 }
 
