@@ -73,10 +73,12 @@ const state = {
         pendingToken: null,
         pendingLandmark: null, // NEW
         currentPath: null,
+        previewPath: null, // Preview of path before placing
         pathType: 'road',
         pathStyle: 'straight',
         pathWidth: 4,
         pathColor: '#8B7355',
+        pathRouting: 'hex', // 'hex' follows grid, 'direct' draws straight lines
         viewport: { offsetX: 0, offsetY: 0, scale: 1 },
         isPanning: false,
         isPainting: false,
@@ -328,29 +330,16 @@ const PATH_STYLES = {
 
 function selectPathType(type) {
     state.hexMap.pathType = type;
-    
-    // Update old-style buttons (by id)
     document.querySelectorAll('[id^="pathType_"]').forEach(btn => {
         btn.classList.toggle('btn-primary', btn.id === `pathType_${type}`);
         btn.classList.toggle('btn-secondary', btn.id !== `pathType_${type}`);
     });
-    
-    // Update new-style buttons (by data-type)
-    document.querySelectorAll('.path-type-btn').forEach(btn => {
-        const btnType = btn.getAttribute('data-type');
-        if (btnType === type) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
-    
     // Update color to match the path type default
     const defaultColor = PATH_STYLES[type].color;
     state.hexMap.pathColor = defaultColor;
     document.getElementById('pathColor').value = defaultColor;
     
-    // If currently drawing a path, update its type and color in real-time
+    // Update current path if drawing
     if (state.hexMap.currentPath) {
         state.hexMap.currentPath.type = type;
         state.hexMap.currentPath.color = defaultColor;
@@ -360,24 +349,12 @@ function selectPathType(type) {
 
 function selectPathStyle(style) {
     state.hexMap.pathStyle = style;
-    
-    // Update old-style buttons (by id)
     document.querySelectorAll('[id^="pathStyle_"]').forEach(btn => {
         btn.classList.toggle('btn-primary', btn.id === `pathStyle_${style}`);
         btn.classList.toggle('btn-secondary', btn.id !== `pathStyle_${style}`);
     });
     
-    // Update new-style buttons (by data-style)
-    document.querySelectorAll('.path-style-btn').forEach(btn => {
-        const btnStyle = btn.getAttribute('data-style');
-        if (btnStyle === style) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    });
-    
-    // If currently drawing a path, update its style in real-time
+    // Update current path if drawing
     if (state.hexMap.currentPath) {
         state.hexMap.currentPath.style = style;
         renderHex();
@@ -388,7 +365,7 @@ function updatePathWidth(value) {
     state.hexMap.pathWidth = parseInt(value);
     document.getElementById('pathWidthValue').textContent = value;
     
-    // If currently drawing a path, update its width in real-time
+    // Update current path if drawing
     if (state.hexMap.currentPath) {
         state.hexMap.currentPath.width = parseInt(value);
         renderHex();
@@ -426,6 +403,145 @@ function startPath(q, r) {
     };
 }
 
+// Find hex-based path between two points using A* pathfinding with diagonal preference
+function findHexPath(startQ, startR, endQ, endR) {
+    // Return direct path if same hex
+    if (startQ === endQ && startR === endR) {
+        return [{ q: startQ, r: startR }];
+    }
+    
+    // Calculate distance between hexes (for heuristic)
+    const hexDistance = (q1, r1, q2, r2) => {
+        return (Math.abs(q1 - q2) + Math.abs(q1 + r1 - q2 - r2) + Math.abs(r1 - r2)) / 2;
+    };
+    
+    // Get the 6 direct neighbors of a hex
+    const getDirectNeighbors = (q, r) => {
+        return [
+            { q: q + 1, r: r },
+            { q: q - 1, r: r },
+            { q: q, r: r + 1 },
+            { q: q, r: r - 1 },
+            { q: q + 1, r: r - 1 },
+            { q: q - 1, r: r + 1 }
+        ];
+    };
+    
+    // Calculate direction preference (prefer moving toward goal)
+    const getDirectionScore = (fromQ, fromR, toQ, toR, goalQ, goalR) => {
+        const currentDist = hexDistance(fromQ, fromR, goalQ, goalR);
+        const nextDist = hexDistance(toQ, toR, goalQ, goalR);
+        // Lower score is better - prefer moves that get us closer
+        return nextDist - currentDist;
+    };
+    
+    // A* pathfinding with direction preference
+    const openSet = [{ q: startQ, r: startR, g: 0, h: hexDistance(startQ, startR, endQ, endR), parent: null }];
+    const closedSet = new Set();
+    const gScores = new Map();
+    gScores.set(`${startQ},${startR}`, 0);
+    
+    while (openSet.length > 0) {
+        // Get node with lowest f score (g + h)
+        openSet.sort((a, b) => {
+            const fA = a.g + a.h;
+            const fB = b.g + b.h;
+            if (Math.abs(fA - fB) < 0.01) {
+                // If f scores are equal, prefer better direction
+                const dirA = getDirectionScore(a.parent?.q || startQ, a.parent?.r || startR, a.q, a.r, endQ, endR);
+                const dirB = getDirectionScore(b.parent?.q || startQ, b.parent?.r || startR, b.q, b.r, endQ, endR);
+                return dirA - dirB;
+            }
+            return fA - fB;
+        });
+        const current = openSet.shift();
+        
+        const currentKey = `${current.q},${current.r}`;
+        
+        // Check if we reached the goal
+        if (current.q === endQ && current.r === endR) {
+            // Reconstruct path
+            const path = [];
+            let node = current;
+            while (node) {
+                path.unshift({ q: node.q, r: node.r });
+                node = node.parent;
+            }
+            return smoothPath(path);
+        }
+        
+        closedSet.add(currentKey);
+        
+        // Check neighbors
+        const neighbors = getDirectNeighbors(current.q, current.r);
+        for (const neighbor of neighbors) {
+            const neighborKey = `${neighbor.q},${neighbor.r}`;
+            
+            if (closedSet.has(neighborKey)) continue;
+            
+            // Cost is 1 for all moves, but we add tiny direction bonus
+            const directionBonus = getDirectionScore(current.q, current.r, neighbor.q, neighbor.r, endQ, endR);
+            const tentativeG = current.g + 1 + (directionBonus * 0.01); // Very small bonus for good direction
+            const existingG = gScores.get(neighborKey);
+            
+            if (existingG === undefined || tentativeG < existingG) {
+                gScores.set(neighborKey, tentativeG);
+                const h = hexDistance(neighbor.q, neighbor.r, endQ, endR);
+                
+                // Remove old entry if exists
+                const existingIndex = openSet.findIndex(n => n.q === neighbor.q && n.r === neighbor.r);
+                if (existingIndex !== -1) {
+                    openSet.splice(existingIndex, 1);
+                }
+                
+                openSet.push({
+                    q: neighbor.q,
+                    r: neighbor.r,
+                    g: tentativeG,
+                    h: h,
+                    parent: current
+                });
+            }
+        }
+        
+        // Safety: limit search to prevent infinite loops
+        if (closedSet.size > 1000) {
+            // Fallback to direct line
+            return [{ q: startQ, r: startR }, { q: endQ, r: endR }];
+        }
+    }
+    
+    // No path found, return direct line
+    return [{ q: startQ, r: startR }, { q: endQ, r: endR }];
+}
+
+// Smooth the path to remove unnecessary zigzags
+function smoothPath(path) {
+    if (path.length <= 2) return path;
+    
+    const smoothed = [path[0]];
+    
+    for (let i = 1; i < path.length - 1; i++) {
+        const prev = path[i - 1];
+        const current = path[i];
+        const next = path[i + 1];
+        
+        // Check if current point is necessary
+        // If we can go directly from prev to next, skip current
+        const distPrevNext = Math.abs(next.q - prev.q) + Math.abs(next.r - prev.r) + Math.abs((next.q + next.r) - (prev.q + prev.r));
+        const distPrevCurrent = Math.abs(current.q - prev.q) + Math.abs(current.r - prev.r) + Math.abs((current.q + current.r) - (prev.q + prev.r));
+        const distCurrentNext = Math.abs(next.q - current.q) + Math.abs(next.r - current.r) + Math.abs((next.q + next.r) - (current.q + current.r));
+        
+        // Keep the point if it's not on a straight diagonal line
+        if (distPrevNext > 2 || distPrevCurrent + distCurrentNext > distPrevNext + 1) {
+            smoothed.push(current);
+        }
+    }
+    
+    smoothed.push(path[path.length - 1]);
+    return smoothed;
+}
+
 function addPathPoint(q, r) {
     if (!state.hexMap.currentPath) {
         startPath(q, r);
@@ -437,19 +553,31 @@ function addPathPoint(q, r) {
         return;
     }
     
-    state.hexMap.currentPath.points.push({ q, r });
+    // Use hex routing if enabled
+    if (state.hexMap.pathRouting === 'hex') {
+        const routedPath = findHexPath(lastPoint.q, lastPoint.r, q, r);
+        // Skip the first point (it's the last point of current path)
+        for (let i = 1; i < routedPath.length; i++) {
+            state.hexMap.currentPath.points.push(routedPath[i]);
+        }
+    } else {
+        // Direct point-to-point
+        state.hexMap.currentPath.points.push({ q, r });
+    }
+    
     renderHex();
 }
 
 function finishPath() {
     if (!state.hexMap.currentPath || state.hexMap.currentPath.points.length < 2) {
         state.hexMap.currentPath = null;
+        state.hexMap.previewPath = null; // Clear preview
         return;
     }
     
     state.hexMap.paths.push({ ...state.hexMap.currentPath });
     state.hexMap.currentPath = null;
-    state.hexMap.selectedPath = null; // Auto-deselect so you can start a new path immediately
+    state.hexMap.previewPath = null; // Clear preview
     updateHexCount();
     renderHex();
     markUnsaved();
@@ -458,6 +586,7 @@ function finishPath() {
 function cancelPath() {
     state.hexMap.currentPath = null;
     state.hexMap.selectedPath = null;
+    state.hexMap.previewPath = null; // Clear preview
     renderHex();
 }
 
@@ -910,6 +1039,53 @@ function drawPath(path) {
             ctx.stroke();
         });
     }
+    
+    ctx.restore();
+}
+
+function drawPathPreview(previewPoints) {
+    if (!previewPoints || previewPoints.length < 2) return;
+    
+    const currentPath = state.hexMap.currentPath;
+    const style = PATH_STYLES[currentPath.type];
+    const width = (currentPath.width || style.width) * state.hexMap.viewport.scale;
+    
+    ctx.save();
+    ctx.strokeStyle = currentPath.color || style.color;
+    ctx.globalAlpha = 0.5; // Semi-transparent
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
+    // Dashed line for preview
+    ctx.setLineDash([8 * state.hexMap.viewport.scale, 6 * state.hexMap.viewport.scale]);
+    
+    ctx.beginPath();
+    
+    // Start from the first point in preview (skip it as it's the last point of current path)
+    previewPoints.forEach((point, index) => {
+        const { x, y } = hexToPixel(point.q, point.r);
+        if (index === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    });
+    
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    // Draw endpoint indicator
+    const lastPoint = previewPoints[previewPoints.length - 1];
+    const { x, y } = hexToPixel(lastPoint.q, lastPoint.r);
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = currentPath.color || style.color;
+    ctx.beginPath();
+    ctx.arc(x, y, 4 * state.hexMap.viewport.scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
     
     ctx.restore();
 }
@@ -2092,6 +2268,11 @@ function renderHex() {
         drawPath(state.hexMap.currentPath);
     }
     
+    // Draw preview path (shows route before clicking)
+    if (state.hexMap.previewPath && state.hexMap.currentPath) {
+        drawPathPreview(state.hexMap.previewPath);
+    }
+    
     // Draw hovered path highlight (lighter)
     if (state.hexMap.hoveredPath && state.hexMap.hoveredPath !== state.hexMap.selectedPath) {
         drawPathHoverHighlight(state.hexMap.hoveredPath);
@@ -2155,9 +2336,10 @@ function renderHex() {
         }
     });
     
-    // Draw path points when in edit mode
-    if (state.hexMap.pathEditMode && state.hexMap.selectedPath) {
-        drawPathPoints(state.hexMap.selectedPath);
+    // Draw path points when in edit mode OR when hovering over a path
+    if ((state.hexMap.pathEditMode && state.hexMap.selectedPath) || 
+        (state.hexMap.hoveredPath && !state.hexMap.currentPath)) {
+        drawPathPoints(state.hexMap.hoveredPath || state.hexMap.selectedPath);
     }
     
     // Update minimap - renderMinimap handles visibility check internally
@@ -2751,6 +2933,16 @@ function handlePointerDown(x, y, button, isTouch, shiftKey = false, detail = 1) 
         
         // Path mode
         if (state.hexMap.mode === 'path') {
+            // Check if clicking on a path point (for direct editing)
+            if (state.hexMap.hoveredPath && state.hexMap.hoveredPathPoint && !state.hexMap.currentPath) {
+                // Start dragging the hovered point directly
+                state.hexMap.selectedPath = state.hexMap.hoveredPath;
+                state.hexMap.draggingPathPoint = state.hexMap.hoveredPathPoint;
+                canvas.style.cursor = 'grabbing';
+                showPathDetails(state.hexMap.hoveredPath);
+                return;
+            }
+            
             if (state.hexMap.pathEditMode && state.hexMap.selectedPath) {
                 const clickedPoint = findPathPointAtPixel(canvasX, canvasY, state.hexMap.selectedPath);
                 if (clickedPoint) {
@@ -2772,6 +2964,8 @@ function handlePointerDown(x, y, button, isTouch, shiftKey = false, detail = 1) 
             if (detail === 2) {
                 if (state.hexMap.currentPath) {
                     finishPath();
+                    // Clear preview
+                    state.hexMap.previewPath = null;
                     return;
                 }
                 
@@ -2978,12 +3172,36 @@ canvas.addEventListener('mousemove', (e) => {
                 canvas.style.cursor = hoveredPoint ? 'move' : 'crosshair';
                 renderHex();
             }
+        } else if (state.hexMap.currentPath && state.hexMap.currentPath.points.length > 0) {
+            // Show preview of path from last point to current hex
+            const lastPoint = state.hexMap.currentPath.points[state.hexMap.currentPath.points.length - 1];
+            if (hex.q !== lastPoint.q || hex.r !== lastPoint.r) {
+                // Calculate preview path
+                if (state.hexMap.pathRouting === 'hex') {
+                    const previewPoints = findHexPath(lastPoint.q, lastPoint.r, hex.q, hex.r);
+                    state.hexMap.previewPath = previewPoints;
+                } else {
+                    state.hexMap.previewPath = [lastPoint, { q: hex.q, r: hex.r }];
+                }
+                canvas.style.cursor = 'crosshair';
+                renderHex();
+            }
         } else if (!state.hexMap.currentPath) {
+            // Not drawing, check for hovering over existing paths
             const hoveredPath = findPathAtPixel(x, y);
             if (hoveredPath !== state.hexMap.hoveredPath) {
                 state.hexMap.hoveredPath = hoveredPath;
                 canvas.style.cursor = hoveredPath ? 'pointer' : 'crosshair';
                 renderHex();
+            }
+            // Also check if hovering over a path point for easier editing
+            if (hoveredPath) {
+                const hoveredPoint = findPathPointAtPixel(x, y, hoveredPath);
+                if (hoveredPoint !== state.hexMap.hoveredPathPoint) {
+                    state.hexMap.hoveredPathPoint = hoveredPoint;
+                    canvas.style.cursor = hoveredPoint ? 'move' : 'pointer';
+                    renderHex();
+                }
             }
         }
     }
@@ -7158,10 +7376,87 @@ if (document.readyState === 'loading') {
 // PATH TOOL ENHANCEMENTS
 // ========================================
 
-// Helper functions for path quick actions
+// Clear path selection and prepare for new path
 function startNewPath() {
-    if (state.hexMap.mode === 'path' && !state.hexMap.currentPath) {
-        startPath();
+    state.hexMap.selectedPath = null;
+    state.hexMap.pathEditMode = false;
+    state.hexMap.currentPath = null;
+    state.hexMap.previewPath = null; // Clear preview
+    state.hexMap.hoveredPath = null;
+    renderHex();
+    updatePathDetails();
+}
+
+// Update path type selection to use new button styles
+function selectPathType(type) {
+    state.hexMap.pathType = type;
+    
+    // Update button states
+    document.querySelectorAll('.path-type-btn').forEach(btn => {
+        const btnType = btn.getAttribute('data-type');
+        if (btnType === type) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    // Update color to match the path type default
+    const PATH_STYLES = {
+        road: { color: '#8B7355' },
+        river: { color: '#4682B4' },
+        trail: { color: '#9ACD32' }
+    };
+    
+    const defaultColor = PATH_STYLES[type].color;
+    state.hexMap.pathColor = defaultColor;
+    document.getElementById('pathColor').value = defaultColor;
+    
+    // Update current path if drawing
+    if (state.hexMap.currentPath) {
+        state.hexMap.currentPath.type = type;
+        state.hexMap.currentPath.color = defaultColor;
+        renderHex();
+    }
+}
+
+// Update path style selection to use new button styles
+function selectPathStyle(style) {
+    state.hexMap.pathStyle = style;
+    
+    // Update button states
+    document.querySelectorAll('.path-style-btn').forEach(btn => {
+        const btnStyle = btn.getAttribute('data-style');
+        if (btnStyle === style) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    // Update current path if drawing
+    if (state.hexMap.currentPath) {
+        state.hexMap.currentPath.style = style;
+        renderHex();
+    }
+}
+
+// Toggle path routing mode
+function togglePathRouting() {
+    state.hexMap.pathRouting = state.hexMap.pathRouting === 'hex' ? 'direct' : 'hex';
+    
+    // Update button states
+    const hexBtn = document.getElementById('pathRouting_hex');
+    const directBtn = document.getElementById('pathRouting_direct');
+    
+    if (hexBtn && directBtn) {
+        if (state.hexMap.pathRouting === 'hex') {
+            hexBtn.classList.add('active');
+            directBtn.classList.remove('active');
+        } else {
+            hexBtn.classList.remove('active');
+            directBtn.classList.add('active');
+        }
     }
 }
 

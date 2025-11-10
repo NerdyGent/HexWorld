@@ -2407,7 +2407,7 @@ textarea.form-input {
 
 .tooltip {
     position: fixed;
-    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+    background: var(--accent-gradient, linear-gradient(135deg, #1e40af 0%, #3b82f6 100%));
     color: #ffffff;
     padding: 16px 20px;
     border-radius: 12px;
@@ -2580,7 +2580,7 @@ textarea.form-input {
     left: 50%;
     transform: translateX(-50%);
     border-width: 0 8px 8px 8px;
-    border-color: transparent transparent #1e40af transparent;
+    border-color: transparent transparent var(--accent-primary, #3b82f6) transparent;
 }
 
 .tooltip-arrow.bottom {
@@ -2588,7 +2588,7 @@ textarea.form-input {
     left: 50%;
     transform: translateX(-50%);
     border-width: 8px 8px 0 8px;
-    border-color: #1e40af transparent transparent transparent;
+    border-color: var(--accent-primary, #3b82f6) transparent transparent transparent;
 }
 
 .tooltip-arrow.left {
@@ -2596,7 +2596,7 @@ textarea.form-input {
     top: 50%;
     transform: translateY(-50%);
     border-width: 8px 8px 8px 0;
-    border-color: transparent #1e40af transparent transparent;
+    border-color: transparent var(--accent-primary, #3b82f6) transparent transparent;
 }
 
 .tooltip-arrow.right {
@@ -2604,7 +2604,7 @@ textarea.form-input {
     top: 50%;
     transform: translateY(-50%);
     border-width: 8px 0 8px 8px;
-    border-color: transparent transparent transparent #1e40af;
+    border-color: transparent transparent transparent var(--accent-primary, #3b82f6);
 }
 
 /* Tooltip Highlight Pulse */

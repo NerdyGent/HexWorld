@@ -419,6 +419,46 @@
 
                     <div class="divider"></div>
 
+                    <!-- Path Routing Mode -->
+                    <div class="path-properties">
+                        <div class="control-row">
+                            <label class="control-label">
+                                <svg class="control-icon" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M20 15.5c-1.25 0-2.45-.2-3.57-.57-.35-.11-.74-.03-1.02.24l-2.2 2.2c-2.83-1.44-5.15-3.75-6.59-6.59l2.2-2.21c.28-.26.36-.65.25-1C8.7 6.45 8.5 5.25 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1zM19 12h2c0-4.97-4.03-9-9-9v2c3.87 0 7 3.13 7 7z"/>
+                                </svg>
+                                Routing
+                            </label>
+                            <div class="path-style-grid">
+                                <button class="path-style-btn active" data-routing="hex" onclick="togglePathRouting()" id="pathRouting_hex">
+                                    <svg class="path-style-preview" viewBox="0 0 60 30" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M5 15 L15 10 L25 15 L35 10 L45 15 L55 10"/>
+                                    </svg>
+                                    <span>Follow Hexes</span>
+                                </button>
+                                <button class="path-style-btn" data-routing="direct" onclick="togglePathRouting()" id="pathRouting_direct">
+                                    <svg class="path-style-preview" viewBox="0 0 60 30" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                        <line x1="5" y1="15" x2="55" y2="10"/>
+                                    </svg>
+                                    <span>Direct Line</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Quick Actions -->
+                    <div class="path-quick-actions">
+                        <button class="btn btn-primary btn-block" onclick="startNewPath()">
+                            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                            </svg>
+                            New Path
+                        </button>
+                    </div>
+
+                    <div class="divider"></div>
+
                     <!-- Tool Help -->
                     <div class="tool-help">
                         <div class="tool-help-title">
