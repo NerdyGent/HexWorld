@@ -214,7 +214,7 @@ const state = {
         lastPaintPos: { q: null, r: null },
         hexSize: 30,
         brushSize: 1,
-        paintSpeed: 8,
+        paintSpeed: 10,
         paintThrottle: 0,
         brushPreviewHexes: [],
         // Cached bounds for performance
@@ -4307,7 +4307,7 @@ function exportHexMap() {
     const a = document.createElement('a');
     a.href = url;
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-    a.download = `hexworld-${timestamp}.json`;
+    a.download = `hexatlas-${timestamp}.json`;
     a.click();
     URL.revokeObjectURL(url);
     
@@ -4886,7 +4886,7 @@ function performExport(mode, hexSize) {
         const a = document.createElement('a');
         a.href = url;
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-        a.download = `hexworld-${mode}-${timestamp}.png`;
+        a.download = `hexatlas-${mode}-${timestamp}.png`;
         a.click();
         URL.revokeObjectURL(url);
         
@@ -5141,7 +5141,7 @@ function updateHexTopBar() {
 }
 
 // ===== INDEXEDDB AUTO-SAVE SYSTEM =====
-const DB_NAME = 'HexWorldsDB';
+const DB_NAME = 'HexAtlasDB';
 const DB_VERSION = 1;
 const STORE_NAME = 'mapData';
 const AUTO_SAVE_INTERVAL = 3000; // Auto-save every 3 seconds
@@ -6414,7 +6414,7 @@ function exportAsJSON() {
         const url = URL.createObjectURL(dataBlob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'hexworlds-map.json';
+        link.download = 'hexatlas-map.json';
         link.click();
         URL.revokeObjectURL(url);
         
@@ -6434,7 +6434,7 @@ function exportAsPNG() {
         }
         
         const link = document.createElement('a');
-        link.download = 'hexworlds-map.png';
+        link.download = 'hexatlas-map.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
         
@@ -6457,7 +6457,7 @@ function exportAsCSV() {
         const url = URL.createObjectURL(dataBlob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'hexworlds-terrain.csv';
+        link.download = 'hexatlas-terrain.csv';
         link.click();
         URL.revokeObjectURL(url);
         
@@ -6538,8 +6538,8 @@ function openThemesModal() {
 
 function updateThemeModalSelections() {
     // Get current theme and accent from localStorage
-    const currentTheme = localStorage.getItem('hexworlds-theme') || 'dark';
-    const currentAccent = localStorage.getItem('hexworlds-accent') || 'purple';
+    const currentTheme = localStorage.getItem('hexatlas-theme') || 'dark';
+    const currentAccent = localStorage.getItem('hexatlas-accent') || 'purple';
     
     // Update theme mode cards
     const themeCards = document.querySelectorAll('#themesModal .setting-group:first-child .theme-card');
@@ -6633,8 +6633,8 @@ function applyTheme() {
     document.body.classList.add(`accent-${selectedAccentColor}`);
     
     // Save to localStorage
-    localStorage.setItem('hexworlds-theme', selectedThemeMode);
-    localStorage.setItem('hexworlds-accent', selectedAccentColor);
+    localStorage.setItem('hexatlas-theme', selectedThemeMode);
+    localStorage.setItem('hexatlas-accent', selectedAccentColor);
     
     closeModal('themesModal');
     
@@ -6643,8 +6643,8 @@ function applyTheme() {
 
 // Load saved theme on page load
 function loadSavedTheme() {
-    const savedTheme = localStorage.getItem('hexworlds-theme') || 'dark';
-    const savedAccent = localStorage.getItem('hexworlds-accent') || 'purple';
+    const savedTheme = localStorage.getItem('hexatlas-theme') || 'dark';
+    const savedAccent = localStorage.getItem('hexatlas-accent') || 'purple';
     
     selectedThemeMode = savedTheme;
     selectedAccentColor = savedAccent;
@@ -6825,7 +6825,7 @@ function handleFileImport(event) {
                 }
             } catch (error) {
                 console.error('Error importing map:', error);
-                alert('Error importing map file. Please make sure it\'s a valid HexWorlds JSON file.');
+                alert('Error importing map file. Please make sure it\'s a valid HexAtlas JSON file.');
             }
         };
         reader.readAsText(file);
@@ -7540,7 +7540,7 @@ class TooltipManager {
 
     loadSeenTooltips() {
         try {
-            const seen = localStorage.getItem('hexworlds_seen_tooltips');
+            const seen = localStorage.getItem('hexatlas_seen_tooltips');
             return seen ? JSON.parse(seen) : {};
         } catch (e) {
             return {};
@@ -7549,7 +7549,7 @@ class TooltipManager {
 
     saveSeenTooltips() {
         try {
-            localStorage.setItem('hexworlds_seen_tooltips', JSON.stringify(this.seenTooltips));
+            localStorage.setItem('hexatlas_seen_tooltips', JSON.stringify(this.seenTooltips));
         } catch (e) {
             console.error('Failed to save tooltip state');
         }
@@ -7739,6 +7739,26 @@ function selectPathType(type) {
     }
 }
 
+// Terrain tool selection (brush vs fill)
+function selectTerrainTool(tool) {
+    // Update button states
+    document.querySelectorAll('[data-tool]').forEach(btn => {
+        const btnTool = btn.getAttribute('data-tool');
+        if (btnTool === tool) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    // Update the fill mode checkbox to match the selected tool
+    const fillModeCheckbox = document.getElementById('fillMode');
+    if (fillModeCheckbox) {
+        fillModeCheckbox.checked = (tool === 'fill');
+        toggleFillMode(tool === 'fill');
+    }
+}
+
 // Update path style selection to use new button styles
 function selectPathStyle(style) {
     state.hexMap.pathStyle = style;
@@ -7779,4 +7799,4 @@ function togglePathRouting() {
     }
 }
 
-console.log('Enhanced HexWorlds with modern path controls and tooltip system loaded!');
+console.log('Enhanced HexAtlas with modern path controls and tooltip system loaded!');
