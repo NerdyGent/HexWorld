@@ -51,6 +51,43 @@ const TERRAINS = {
     }
 };
 
+// TEMPORARY: Hex image tuning variables (DELETE WHEN DONE)
+let HEX_IMAGE_WIDTH_SCALE = 2.0;
+let HEX_IMAGE_HEIGHT_SCALE = 2.0;
+let HEX_IMAGE_Y_OFFSET = 0;
+let HEX_IMAGE_X_OFFSET = 0;
+
+// Hex Pack System - Different visual styles for hexes
+const HEX_PACKS = {
+    basic: {
+        name: 'Basic',
+        description: 'Simple colored hexagons',
+        useImages: false
+    },
+    illustrated: {
+        name: 'Illustrated',
+        description: 'Hand-drawn hex tiles with depth',
+        useImages: true,
+        path: 'assets/hex-packs/illustrated/',
+        terrainMapping: {
+            plains: 'plains.png',
+            grassland: 'grassland.png',
+            forest: 'forest.png',
+            jungle: 'jungle.png',
+            hills: 'hills.png',
+            mountain: 'mountain.png',
+            tundra: 'tundra.png',
+            water: 'water.png',
+            swamp: 'swamp.png',
+            desert: 'desert.png'
+        }
+    }
+};
+
+// Current selected hex pack
+let currentHexPack = 'basic';
+const hexPackImageCache = new Map();
+
 // Landmark icon presets using game-icons.net
 const LANDMARK_ICONS = {
     castle: {
@@ -230,6 +267,146 @@ boundsNeedRecalc: true
 
 const canvas = document.getElementById('hexCanvas');
 const ctx = canvas.getContext('2d');
+
+// ===== UNDO/REDO SYSTEM =====
+const undoRedoSystem = {
+    undoStack: [],
+    redoStack: [],
+    maxStackSize: 50,
+    isApplyingHistory: false, // Prevent recording during undo/redo
+    
+    // Capture current state snapshot
+    captureState() {
+        if (this.isApplyingHistory) return; // Don't capture during undo/redo
+        
+        const snapshot = {
+            hexes: new Map(state.hexMap.hexes), // Clone the hexes map
+            tokens: new Map(state.hexMap.tokens), // Clone tokens
+            landmarks: new Map(state.hexMap.landmarks), // Clone landmarks
+            paths: JSON.parse(JSON.stringify(state.hexMap.paths)), // Deep clone paths
+            nextTokenId: state.nextTokenId,
+            nextPathId: state.nextPathId,
+            nextLandmarkId: state.nextLandmarkId
+        };
+        
+        this.undoStack.push(snapshot);
+        
+        // Limit stack size
+        if (this.undoStack.length > this.maxStackSize) {
+            this.undoStack.shift();
+        }
+        
+        // Clear redo stack when new action is performed
+        this.redoStack = [];
+        
+        this.updateButtons();
+    },
+    
+    // Restore a snapshot
+    restoreState(snapshot) {
+        this.isApplyingHistory = true;
+        
+        state.hexMap.hexes = new Map(snapshot.hexes);
+        state.hexMap.tokens = new Map(snapshot.tokens);
+        state.hexMap.landmarks = new Map(snapshot.landmarks);
+        state.hexMap.paths = JSON.parse(JSON.stringify(snapshot.paths));
+        state.nextTokenId = snapshot.nextTokenId;
+        state.nextPathId = snapshot.nextPathId;
+        state.nextLandmarkId = snapshot.nextLandmarkId;
+        
+        // Clear selections
+        state.hexMap.selectedHex = null;
+        state.hexMap.selectedToken = null;
+        state.hexMap.selectedLandmark = null;
+        state.hexMap.selectedPath = null;
+        
+        // Recalculate bounds
+        state.hexMap.boundsNeedRecalc = true;
+        
+        this.isApplyingHistory = false;
+        
+        renderHex();
+        updateHexStats();
+        this.updateButtons();
+    },
+    
+    undo() {
+        if (this.undoStack.length === 0) return;
+        
+        // Save current state to redo stack
+        const currentState = {
+            hexes: new Map(state.hexMap.hexes),
+            tokens: new Map(state.hexMap.tokens),
+            landmarks: new Map(state.hexMap.landmarks),
+            paths: JSON.parse(JSON.stringify(state.hexMap.paths)),
+            nextTokenId: state.nextTokenId,
+            nextPathId: state.nextPathId,
+            nextLandmarkId: state.nextLandmarkId
+        };
+        this.redoStack.push(currentState);
+        
+        // Restore previous state
+        const previousState = this.undoStack.pop();
+        this.restoreState(previousState);
+    },
+    
+    redo() {
+        if (this.redoStack.length === 0) return;
+        
+        // Save current state to undo stack
+        const currentState = {
+            hexes: new Map(state.hexMap.hexes),
+            tokens: new Map(state.hexMap.tokens),
+            landmarks: new Map(state.hexMap.landmarks),
+            paths: JSON.parse(JSON.stringify(state.hexMap.paths)),
+            nextTokenId: state.nextTokenId,
+            nextPathId: state.nextPathId,
+            nextLandmarkId: state.nextLandmarkId
+        };
+        this.undoStack.push(currentState);
+        
+        // Restore next state
+        const nextState = this.redoStack.pop();
+        this.restoreState(nextState);
+    },
+    
+    updateButtons() {
+        const undoBtn = document.getElementById('undoBtn');
+        const redoBtn = document.getElementById('redoBtn');
+        
+        if (undoBtn) {
+            undoBtn.disabled = this.undoStack.length === 0;
+            undoBtn.style.opacity = this.undoStack.length === 0 ? '0.5' : '1';
+        }
+        
+        if (redoBtn) {
+            redoBtn.disabled = this.redoStack.length === 0;
+            redoBtn.style.opacity = this.redoStack.length === 0 ? '0.5' : '1';
+        }
+    },
+    
+    clear() {
+        this.undoStack = [];
+        this.redoStack = [];
+        this.updateButtons();
+    }
+};
+
+// Keyboard shortcuts for undo/redo
+document.addEventListener('keydown', (e) => {
+    // Ctrl+Z or Cmd+Z for undo
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undoRedoSystem.undo();
+    }
+    // Ctrl+Shift+Z or Cmd+Shift+Z or Ctrl+Y for redo
+    if (((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') || 
+        (e.ctrlKey && e.key === 'y')) {
+        e.preventDefault();
+        undoRedoSystem.redo();
+    }
+});
+// ===== END UNDO/REDO SYSTEM =====
 let hexIconCache = new Map();
 
 // Hex Math
@@ -709,6 +886,7 @@ function finishPath() {
     updateHexCount();
     renderHex();
     markUnsaved();
+    undoRedoSystem.captureState();
 }
 
 function cancelPath() {
@@ -725,6 +903,7 @@ function deletePath(pathId) {
         updateHexCount();
         renderHex();
         markUnsaved();
+        undoRedoSystem.captureState();
     }
 }
 
@@ -1371,6 +1550,7 @@ function deleteToken(tokenId) {
     updateHexCount();
     renderHex();
     markUnsaved();
+    undoRedoSystem.captureState();
 }
 
 function findTokenAtPixel(x, y) {
@@ -1443,6 +1623,7 @@ function deleteLandmark(q, r) {
     updateHexCount();
     renderHex();
     markUnsaved();
+    undoRedoSystem.captureState();
 }
 
 function deleteLandmarkById(landmarkId) {
@@ -1452,6 +1633,7 @@ function deleteLandmarkById(landmarkId) {
             updateHexCount();
             renderHex();
             markUnsaved();
+            undoRedoSystem.captureState();
             return;
         }
     }
@@ -2351,6 +2533,9 @@ function floodFill(startQ, startR, targetTerrain) {
     }
     
     renderHex();
+    
+    // Capture undo state after fill operation
+    undoRedoSystem.captureState();
 }
 
 function checkAutoPan(mouseX, mouseY) {
@@ -2447,6 +2632,68 @@ async function preloadHexIcons() {
     renderHex();
 }
 
+// Preload hex pack images
+async function preloadHexPackImages(packName) {
+    const pack = HEX_PACKS[packName];
+    if (!pack || !pack.useImages) return;
+    
+    const loadPromises = [];
+    
+    for (const [terrain, filename] of Object.entries(pack.terrainMapping)) {
+        const cacheKey = `${packName}_${terrain}`;
+        if (!hexPackImageCache.has(cacheKey)) {
+            const promise = new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    hexPackImageCache.set(cacheKey, img);
+                    resolve();
+                };
+                img.onerror = () => {
+                    console.warn(`Hex pack image not found: ${pack.path}${filename} - will use basic color fallback`);
+                    // Don't cache anything - drawHexTile will use fallback rendering
+                    resolve(); // Resolve anyway so other images can load
+                };
+                img.src = pack.path + filename;
+            });
+            loadPromises.push(promise);
+        }
+    }
+    
+    await Promise.all(loadPromises);
+    console.log(`Hex pack "${packName}" images loaded`);
+}
+
+// Switch hex pack
+async function switchHexPack(packName) {
+    if (!HEX_PACKS[packName]) {
+        console.error(`Hex pack "${packName}" not found`);
+        return;
+    }
+    
+    currentHexPack = packName;
+    
+    // Preload images if needed
+    if (HEX_PACKS[packName].useImages) {
+        await preloadHexPackImages(packName);
+    }
+    
+    // Save to localStorage
+    localStorage.setItem('hexatlas-hexpack', packName);
+    
+    // Re-render the map
+    renderHex();
+    
+    console.log(`Switched to hex pack: ${packName}`);
+}
+
+// Load saved hex pack on init
+function loadSavedHexPack() {
+    const savedPack = localStorage.getItem('hexatlas-hexpack') || 'basic';
+    if (HEX_PACKS[savedPack]) {
+        switchHexPack(savedPack);
+    }
+}
+
 function renderHex() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const { minQ, maxQ, minR, maxR } = getVisibleHexRange();
@@ -2467,8 +2714,9 @@ function renderHex() {
     }
     
     // Draw painted hexes
-    for (let q = minQ; q <= maxQ; q++) {
-        for (let r = minR; r <= maxR; r++) {
+    // Render top-to-bottom, left-to-right for proper 3D isometric layering
+    for (let r = minR; r <= maxR; r++) {
+        for (let q = minQ; q <= maxQ; q++) {
             const hex = getHex(q, r);
             if (hex) {
                 drawHexTile(hex);
@@ -2649,13 +2897,65 @@ function drawHexTile(hex) {
     const { x, y } = hexToPixel(hex.q, hex.r);
     const size = state.hexMap.hexSize * state.hexMap.viewport.scale;
     
-    ctx.fillStyle = TERRAINS[hex.terrain].color;
-    drawHexagon(ctx, x, y, size);
-    ctx.fill();
-    
-    ctx.strokeStyle = '#2d3748';
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    // Check if we're using an image-based hex pack
+    const hexPack = HEX_PACKS[currentHexPack];
+    if (hexPack.useImages) {
+        // Draw hex image if available
+        const terrainFile = hexPack.terrainMapping[hex.terrain];
+        if (terrainFile) {
+            const cacheKey = `${currentHexPack}_${hex.terrain}`;
+            const hexImage = hexPackImageCache.get(cacheKey);
+            
+            if (hexImage) {
+                // Calculate the size to draw the image
+                // For flat-top hexagons: width = 2 * size, height = sqrt(3) * size
+                // These are 3D isometric tiles that are taller than they are wide
+                const hexWidth = size * 2;
+                const hexHeight = size * Math.sqrt(3);
+                
+                // Use tuning variables for real-time adjustment
+                const imageWidth = hexWidth * HEX_IMAGE_WIDTH_SCALE;
+                const imageHeight = hexHeight * HEX_IMAGE_HEIGHT_SCALE;
+                
+                // Offsets for fine positioning
+                const xOffset = size * HEX_IMAGE_X_OFFSET;
+                const yOffset = size * HEX_IMAGE_Y_OFFSET;
+                
+                ctx.save();
+                ctx.drawImage(hexImage, 
+                    x - imageWidth/2 + xOffset, 
+                    y - imageHeight/2 + yOffset,
+                    imageWidth, 
+                    imageHeight
+                );
+                ctx.restore();
+            } else {
+                // Fallback to basic rendering if image not loaded
+                ctx.fillStyle = TERRAINS[hex.terrain].color;
+                drawHexagon(ctx, x, y, size);
+                ctx.fill();
+                ctx.strokeStyle = '#2d3748';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+    } else {
+        // Basic hex pack - draw filled hexagon
+        ctx.fillStyle = TERRAINS[hex.terrain].color;
+        drawHexagon(ctx, x, y, size);
+        ctx.fill();
+        
+        ctx.strokeStyle = '#2d3748';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Draw normal terrain icon for basic pack
+        const icon = hexIconCache.get(hex.terrain);
+        if (icon && size > 15) {
+            const iconSize = size * 0.8;
+            ctx.drawImage(icon, x - iconSize/2, y - iconSize/2, iconSize, iconSize);
+        }
+    }
     
     // Check if there's a landmark on this hex in 'icon' mode
     const landmark = getLandmark(hex.q, hex.r);
@@ -2670,13 +2970,6 @@ function drawHexTile(hex) {
             ctx.globalAlpha = 1.0;
             ctx.drawImage(icon, x - iconSize/2, y - iconSize/2, iconSize, iconSize);
             ctx.restore();
-        }
-    } else {
-        // Draw normal terrain icon
-        const icon = hexIconCache.get(hex.terrain);
-        if (icon && size > 15) {
-            const iconSize = size * 0.8;
-            ctx.drawImage(icon, x - iconSize/2, y - iconSize/2, iconSize, iconSize);
         }
     }
     
@@ -3316,6 +3609,9 @@ function handlePointerDown(x, y, button, isTouch, shiftKey = false, detail = 1) 
                 
                 renderHex();
                 updateUI();
+                
+                // Capture undo state after creating token
+                undoRedoSystem.captureState();
             }
             return;
         }
@@ -3356,6 +3652,9 @@ function handlePointerDown(x, y, button, isTouch, shiftKey = false, detail = 1) 
                 
                 renderHex();
                 updateUI();
+                
+                // Capture undo state after creating landmark
+                undoRedoSystem.captureState();
             }
             return;
         }
@@ -3652,15 +3951,24 @@ canvas.addEventListener('touchmove', (e) => {
 }, { passive: false });
 
 canvas.addEventListener('mouseup', () => {
+    // Capture undo state when finishing painting/erasing
+    if (state.hexMap.isPainting && (state.hexMap.mode === 'paint' || state.hexMap.mode === 'erase')) {
+        undoRedoSystem.captureState();
+    }
+    
     if (state.hexMap.draggingToken) {
         animateTokenScale(state.hexMap.draggingToken.id, 1.0, 200);
         state.hexMap.draggingToken = null;
+        // Capture undo after moving token
+        undoRedoSystem.captureState();
     }
     if (state.hexMap.draggingPathPoint) {
         state.hexMap.draggingPathPoint = null;
         if (state.hexMap.selectedPath) {
             showPathDetails(state.hexMap.selectedPath);
         }
+        // Capture undo after editing path
+        undoRedoSystem.captureState();
     }
     state.hexMap.isPainting = false;
     state.hexMap.isPanning = false;
@@ -4196,7 +4504,8 @@ function updateMinimapViewport() {
     const minX = parseFloat(minimapData.offsetX);
     const minY = parseFloat(minimapData.offsetY);
     
-    if (!scale || !minX || !minY) return;
+    // FIXED: Use isNaN to properly handle 0 coordinates
+    if (!scale || isNaN(minX) || isNaN(minY)) return;
     
     // Get main canvas viewport in world coordinates
     const mainX = -state.hexMap.viewport.offsetX;
@@ -4209,7 +4518,7 @@ function updateMinimapViewport() {
     const viewWorldWidth = mainCanvasElement.width / state.hexMap.viewport.scale;
     const viewWorldHeight = mainCanvasElement.height / state.hexMap.viewport.scale;
     
-    // Convert to minimap coordinates
+    // Convert to minimap coordinates (NO centering offsets)
     const minimapX = (mainX - minX) * scale;
     const minimapY = (mainY - minY) * scale;
     const minimapWidth = viewWorldWidth * scale;
@@ -5022,6 +5331,11 @@ function importHexMap() {
             
             // Force bounds recalculation after import
             state.hexMap.boundsNeedRecalc = true;
+            
+            // FIXED: Mark minimap as needing update
+            minimapDirty = true;
+            minimapBoundsDirty = true;
+            
             updateHexCount();
             deselectHex();
             
@@ -5067,6 +5381,10 @@ function clearHexMap() {
         // Reset bounds cache
         state.hexMap.cachedBounds = null;
         state.hexMap.boundsNeedRecalc = true;
+        
+        // FIXED: Mark minimap as needing update
+        minimapDirty = true;
+        minimapBoundsDirty = true;
         
         // Clear the cached data
         clearMapCache().then(() => {
@@ -5124,6 +5442,10 @@ function createStarterMap() {
             setHex(q, r, terrain);
         }
     }
+    
+    // FIXED: Mark minimap as needing update
+    minimapDirty = true;
+    minimapBoundsDirty = true;
     
     updateHexCount();
     deselectHex();
@@ -5539,6 +5861,7 @@ async function init() {
     }
     
     preloadHexIcons();
+    loadSavedHexPack(); // Load saved hex pack preference
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
     updateUI();
@@ -6540,6 +6863,7 @@ function updateThemeModalSelections() {
     // Get current theme and accent from localStorage
     const currentTheme = localStorage.getItem('hexatlas-theme') || 'dark';
     const currentAccent = localStorage.getItem('hexatlas-accent') || 'purple';
+    const currentHexPackSetting = localStorage.getItem('hexatlas-hexpack') || 'basic';
     
     // Update theme mode cards
     const themeCards = document.querySelectorAll('#themesModal .setting-group:first-child .theme-card');
@@ -6552,7 +6876,7 @@ function updateThemeModalSelections() {
     });
     
     // Update accent color cards
-    const accentCards = document.querySelectorAll('#themesModal .setting-group:last-child .theme-card');
+    const accentCards = document.querySelectorAll('#themesModal .setting-group:nth-child(2) .theme-card');
     accentCards.forEach(card => {
         card.classList.remove('active');
         const cardAccent = card.id.replace('accent-', '');
@@ -6561,9 +6885,48 @@ function updateThemeModalSelections() {
         }
     });
     
+    // Update hex pack cards
+    const hexPackCards = document.querySelectorAll('[id^="hexpack-"]');
+    hexPackCards.forEach(card => {
+        card.classList.remove('active');
+        const packName = card.id.replace('hexpack-', '');
+        const nameEl = card.querySelector('.theme-name');
+        if (packName === currentHexPackSetting) {
+            card.classList.add('active');
+            if (nameEl && !nameEl.textContent.includes('✓')) {
+                nameEl.textContent = nameEl.textContent.replace(/\s✓?$/, '') + ' ✓';
+            }
+        } else {
+            if (nameEl) {
+                nameEl.textContent = nameEl.textContent.replace(/\s✓$/, '');
+            }
+        }
+    });
+    
     // Update selected variables
     selectedThemeMode = currentTheme;
     selectedAccentColor = currentAccent;
+}
+
+// Hex pack selection
+let selectedHexPack = localStorage.getItem('hexatlas-hexpack') || 'basic';
+
+function selectHexPack(card, packName) {
+    const cards = card.parentElement.querySelectorAll('.theme-card');
+    cards.forEach(c => {
+        c.classList.remove('active');
+        const nameEl = c.querySelector('.theme-name');
+        if (nameEl) {
+            nameEl.textContent = nameEl.textContent.replace(/\s✓$/, '');
+        }
+    });
+    card.classList.add('active');
+    const nameEl = card.querySelector('.theme-name');
+    if (nameEl && !nameEl.textContent.includes('✓')) {
+        nameEl.textContent = nameEl.textContent + ' ✓';
+    }
+    selectedHexPack = packName;
+    console.log('Hex pack selected:', packName);
 }
 
 function openShortcutsModal() {
@@ -6632,13 +6995,16 @@ function applyTheme() {
     accentClasses.forEach(cls => document.body.classList.remove(cls));
     document.body.classList.add(`accent-${selectedAccentColor}`);
     
+    // Apply hex pack
+    switchHexPack(selectedHexPack);
+    
     // Save to localStorage
     localStorage.setItem('hexatlas-theme', selectedThemeMode);
     localStorage.setItem('hexatlas-accent', selectedAccentColor);
     
     closeModal('themesModal');
     
-    console.log('Theme applied:', selectedThemeMode, selectedAccentColor);
+    console.log('Theme applied:', selectedThemeMode, selectedAccentColor, 'Hex Pack:', selectedHexPack);
 }
 
 // Load saved theme on page load

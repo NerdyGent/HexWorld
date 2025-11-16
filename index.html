@@ -68,6 +68,18 @@
                     <span id="saveText">Saved</span>
                 </button>
 
+                <!-- Undo/Redo Buttons -->
+                <button class="header-btn" id="undoBtn" onclick="undoRedoSystem.undo()" title="Undo (Ctrl+Z)" disabled style="opacity: 0.5;">
+                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/>
+                    </svg>
+                </button>
+                <button class="header-btn" id="redoBtn" onclick="undoRedoSystem.redo()" title="Redo (Ctrl+Shift+Z)" disabled style="opacity: 0.5;">
+                    <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"/>
+                    </svg>
+                </button>
+
                 <!-- Export Dropdown -->
                 <div class="dropdown">
                     <button class="header-btn" id="exportBtn">
@@ -637,6 +649,23 @@
                         </div>
                     </div>
                 </div>
+                <div class="setting-group">
+                    <h3>Hex Pack Style</h3>
+                    <p style="color: #9ca3af; font-size: 13px; margin-bottom: 12px;">Choose how your hex tiles look on the map</p>
+                    <div class="theme-grid">
+                        <div class="theme-card active" id="hexpack-basic" onclick="selectHexPack(this, 'basic')">
+                            <div class="theme-preview" style="background: linear-gradient(135deg, #90EE90 0%, #228B22 50%, #4682B4 100%);">
+                                <div style="color: white; font-size: 24px; text-align: center; line-height: 80px;">⬡</div>
+                            </div>
+                            <div class="theme-name">Basic ✓</div>
+                        </div>
+                        <div class="theme-card" id="hexpack-illustrated" onclick="selectHexPack(this, 'illustrated')">
+                            <div class="theme-preview" style="background: url('assets/hex-packs/illustrated/Plains.png') center/cover, linear-gradient(135deg, #90EE90 0%, #228B22 100%);">
+                            </div>
+                            <div class="theme-name">Illustrated</div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeModal('themesModal')">Cancel</button>
@@ -788,6 +817,7 @@
     <!-- Hidden file input for importing -->
     <input type="file" id="importFileInput" accept=".json,image/*" style="display: none;" onchange="handleFileImport(event)">
 
+   
     <script src="game.js"></script>
 </body>
 </html>
