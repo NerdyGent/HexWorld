@@ -3397,7 +3397,22 @@ function selectTerrain(terrain) {
 
 function updateBrushSize(value) {
     state.hexMap.brushSize = parseInt(value);
-    document.getElementById('brushSizeValue').textContent = value;
+    
+    // Update visual brush size buttons
+    document.querySelectorAll('.brush-size-option').forEach(btn => {
+        const btnSize = btn.getAttribute('data-size');
+        if (btnSize === value.toString()) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    
+    // Legacy support for slider if it exists
+    const sliderValue = document.getElementById('brushSizeValue');
+    if (sliderValue) {
+        sliderValue.textContent = value;
+    }
 }
 
 function updatePaintSpeed(value) {
@@ -4096,6 +4111,14 @@ document.addEventListener('keydown', (e) => {
                    document.activeElement.isContentEditable;
     
     if (isTyping) return;
+    
+    // Brush size shortcuts (1-5 keys) - only in paint/erase mode
+    if (state.hexMap.mode === 'paint' || state.hexMap.mode === 'erase') {
+        if (e.key >= '1' && e.key <= '5') {
+            e.preventDefault();
+            updateBrushSize(parseInt(e.key));
+        }
+    }
     
     if (e.key === 'Escape') {
         if (state.hexMap.currentPath) {
@@ -8216,6 +8239,8 @@ if (document.readyState === 'loading') {
         if (fileInput) {
             fileInput.addEventListener('change', handleFileImport);
         }
+        // Initialize brush size button state
+        updateBrushSize(state.hexMap.brushSize || 1);
     });
 } else {
     tooltipManager = new TooltipManager();
@@ -8224,6 +8249,10 @@ if (document.readyState === 'loading') {
     if (fileInput) {
         fileInput.addEventListener('change', handleFileImport);
     }
+    // Initialize brush size button state
+    setTimeout(() => {
+        updateBrushSize(state.hexMap.brushSize || 1);
+    }, 100);
 }
 
 // ========================================
