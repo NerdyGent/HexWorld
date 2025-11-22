@@ -15,6 +15,34 @@
     <!-- Tooltip Container -->
     <div id="tooltip-container"></div>
 
+    <!-- Welcome Tutorial Modal -->
+    <div id="welcomeModal" class="welcome-modal" style="display: none;">
+        <div class="welcome-overlay"></div>
+        <div class="welcome-container">
+            <div class="welcome-content">
+                <!-- Progress indicator -->
+                <div class="welcome-progress">
+                    <div class="welcome-progress-bar" id="welcomeProgress"></div>
+                </div>
+                
+                <!-- Step content container -->
+                <div class="welcome-step-content" id="welcomeStepContent">
+                    <!-- Steps will be dynamically inserted here -->
+                </div>
+                
+                <!-- Navigation buttons -->
+                <div class="welcome-footer">
+                    <button class="welcome-btn welcome-btn-skip" id="welcomeSkipBtn">Skip Tutorial</button>
+                    <div class="welcome-nav">
+                        <button class="welcome-btn welcome-btn-back" id="welcomeBackBtn" style="display: none;">Back</button>
+                        <button class="welcome-btn welcome-btn-next" id="welcomeNextBtn">Next</button>
+                        <button class="welcome-btn welcome-btn-start" id="welcomeStartBtn" style="display: none;">Start Creating!</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="app">
         <div class="topbar">
             <div class="topbar-left">
@@ -155,6 +183,12 @@
                             </svg>
                             Reset Tutorial Tooltips
                         </div>
+                        <div class="dropdown-item" onclick="resetWelcomeTutorial()">
+                            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                            </svg>
+                            Reset Welcome Tutorial
+                        </div>
                         <div class="dropdown-divider"></div>
                         <div class="dropdown-item" onclick="window.open('https://docs.hexworlds.app', '_blank')">
                             <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
@@ -293,7 +327,7 @@
                             <div style="font-size: 11px; color: #718096; margin-top: 4px;">Paint all connected hexes at once</div>
                         </div>
                         
-                        <div class="brush-control">
+                        <div class="brush-control" style="margin-top: 24px;">
                             <label>Brush Size</label>
                             <div class="slider-container">
                                 <input type="range" class="slider" id="brushSize" 

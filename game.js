@@ -88,6 +88,190 @@ const HEX_PACKS = {
 let currentHexPack = 'basic';
 const hexPackImageCache = new Map();
 
+// Token icon presets - for ships, armies, factions, groups
+const TOKEN_ICONS = {
+    // Military & Combat
+    army: {
+        name: 'Army',
+        icon: 'https://api.iconify.design/game-icons/spears.svg?color=%23000000',
+        color: '#8B0000'
+    },
+    cavalry: {
+        name: 'Cavalry',
+        icon: 'https://api.iconify.design/game-icons/cavalry.svg?color=%23000000',
+        color: '#CD853F'
+    },
+    infantry: {
+        name: 'Infantry',
+        icon: 'https://api.iconify.design/game-icons/swords-emblem.svg?color=%23000000',
+        color: '#696969'
+    },
+    archers: {
+        name: 'Archers',
+        icon: 'https://api.iconify.design/game-icons/bow-arrow.svg?color=%23000000',
+        color: '#8B4513'
+    },
+    siege: {
+        name: 'Siege',
+        icon: 'https://api.iconify.design/game-icons/catapult.svg?color=%23000000',
+        color: '#2F4F4F'
+    },
+    
+    // Naval & Ships
+    ship: {
+        name: 'Ship',
+        icon: 'https://api.iconify.design/game-icons/sailboat.svg?color=%23000000',
+        color: '#4682B4'
+    },
+    warship: {
+        name: 'Warship',
+        icon: 'https://api.iconify.design/game-icons/trireme.svg?color=%23000000',
+        color: '#B22222'
+    },
+    fleet: {
+        name: 'Fleet',
+        icon: 'https://api.iconify.design/game-icons/ship-wheel.svg?color=%23000000',
+        color: '#1E90FF'
+    },
+    longship: {
+        name: 'Longship',
+        icon: 'https://api.iconify.design/game-icons/drakkar.svg?color=%23000000',
+        color: '#708090'
+    },
+    
+    // Characters & Heroes
+    warrior: {
+        name: 'Warrior',
+        icon: 'https://api.iconify.design/game-icons/swordman.svg?color=%23000000',
+        color: '#FFD700'
+    },
+    paladin: {
+        name: 'Paladin',
+        icon: 'https://api.iconify.design/game-icons/knight-banner.svg?color=%23000000',
+        color: '#C0C0C0'
+    },
+    wizard: {
+        name: 'Wizard',
+        icon: 'https://api.iconify.design/game-icons/wizard-staff.svg?color=%23000000',
+        color: '#9370DB'
+    },
+    rogue: {
+        name: 'Rogue',
+        icon: 'https://api.iconify.design/game-icons/hood.svg?color=%23000000',
+        color: '#2F4F4F'
+    },
+    
+    // Factions & Groups
+    crown: {
+        name: 'Crown',
+        icon: 'https://api.iconify.design/game-icons/crown.svg?color=%23000000',
+        color: '#8B008B'
+    },
+    empire: {
+        name: 'Empire',
+        icon: 'https://api.iconify.design/game-icons/laurels.svg?color=%23000000',
+        color: '#B8860B'
+    },
+    rebels: {
+        name: 'Rebels',
+        icon: 'https://api.iconify.design/game-icons/crossed-swords.svg?color=%23000000',
+        color: '#DC143C'
+    },
+    bandits: {
+        name: 'Bandits',
+        icon: 'https://api.iconify.design/game-icons/bandit.svg?color=%23000000',
+        color: '#8B4513'
+    },
+    merchants: {
+        name: 'Merchants',
+        icon: 'https://api.iconify.design/game-icons/gold-bar.svg?color=%23000000',
+        color: '#DAA520'
+    },
+    
+    // Creatures & Monsters
+    dragon: {
+        name: 'Dragon',
+        icon: 'https://api.iconify.design/game-icons/dragon-head.svg?color=%23000000',
+        color: '#FF4500'
+    },
+    beast: {
+        name: 'Beast',
+        icon: 'https://api.iconify.design/game-icons/tiger-head.svg?color=%23000000',
+        color: '#654321'
+    },
+    monster: {
+        name: 'Monster',
+        icon: 'https://api.iconify.design/game-icons/ogre.svg?color=%23000000',
+        color: '#8B0000'
+    },
+    
+    // Party & Groups
+    adventurers: {
+        name: 'Adventurers',
+        icon: 'https://api.iconify.design/game-icons/knapsack.svg?color=%23000000',
+        color: '#4169E1'
+    },
+    scouts: {
+        name: 'Scouts',
+        icon: 'https://api.iconify.design/game-icons/cowled.svg?color=%23000000',
+        color: '#556B2F'
+    },
+    
+    // Heraldic Animals & Symbols
+    lion: {
+        name: 'Lion',
+        icon: 'https://api.iconify.design/game-icons/lion.svg?color=%23000000',
+        color: '#DAA520'
+    },
+    eagle: {
+        name: 'Eagle',
+        icon: 'https://api.iconify.design/game-icons/eagle-emblem.svg?color=%23000000',
+        color: '#8B4513'
+    },
+    wolf: {
+        name: 'Wolf',
+        icon: 'https://api.iconify.design/game-icons/wolf-head.svg?color=%23000000',
+        color: '#696969'
+    },
+    bear: {
+        name: 'Bear',
+        icon: 'https://api.iconify.design/game-icons/bear-head.svg?color=%23000000',
+        color: '#8B4513'
+    },
+    stag: {
+        name: 'Stag',
+        icon: 'https://api.iconify.design/game-icons/deer-head.svg?color=%23000000',
+        color: '#654321'
+    },
+    snake: {
+        name: 'Snake',
+        icon: 'https://api.iconify.design/game-icons/snake.svg?color=%23000000',
+        color: '#228B22'
+    },
+    raven: {
+        name: 'Raven',
+        icon: 'https://api.iconify.design/game-icons/raven.svg?color=%23000000',
+        color: '#2F4F4F'
+    },
+    boar: {
+        name: 'Boar',
+        icon: 'https://api.iconify.design/game-icons/boar.svg?color=%23000000',
+        color: '#8B4513'
+    },
+    
+    // Special Symbols
+    banner: {
+        name: 'Banner',
+        icon: 'https://api.iconify.design/game-icons/round-star.svg?color=%23000000',
+        color: '#4B0082'
+    },
+    camp: {
+        name: 'Camp',
+        icon: 'https://api.iconify.design/game-icons/camping-tent.svg?color=%23000000',
+        color: '#8B4513'
+    }
+};
+
 // Landmark icon presets using game-icons.net
 const LANDMARK_ICONS = {
     castle: {
@@ -1542,6 +1726,8 @@ function createToken(q, r, data = {}) {
         name: data.name || 'New Token',
         type: data.type || 'player',
         color: data.color || '#667eea',
+        iconColor: data.iconColor || '#FFFFFF',
+        icon: data.icon || null,
         label: data.label || 'T',
         size: data.size || 1,
         attributes: data.attributes || {},
@@ -1624,6 +1810,7 @@ function createLandmark(q, r, data = {}) {
         showLabel: data.showLabel !== false,
         labelPosition: data.labelPosition || 'above',
         size: data.size || 1.0,
+        hideTerrainIcon: data.hideTerrainIcon !== false, // Default to true - hide terrain icon when landmark present
         attributes: data.attributes || {},
         notes: data.notes || '',
         visible: data.visible !== false,
@@ -1831,8 +2018,58 @@ function showTokenDetails(token) {
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label">Color</label>
+                <label class="form-label">Circle Color</label>
                 <input type="color" class="form-input" value="${token.color}" style="height: 50px; cursor: pointer;" onchange="updateTokenField('${token.id}', 'color', this.value); renderHex();">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Icon (Optional)</label>
+                <div id="tokenIconGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; max-height: 300px; overflow-y: auto; padding: 4px; background: var(--bg-secondary); border-radius: 8px;">
+                    ${Object.entries(TOKEN_ICONS).map(([key, preset]) => {
+                        const isSelected = token.icon === preset.icon;
+                        return `
+                        <button 
+                            class="btn" 
+                            type="button"
+                            style="
+                                padding: 10px 6px; 
+                                display: flex; 
+                                flex-direction: column; 
+                                align-items: center; 
+                                gap: 6px;
+                                background: ${isSelected ? 'var(--accent-alpha-20)' : 'var(--bg-tertiary)'};
+                                border: 2px solid ${isSelected ? 'var(--accent-primary)' : 'var(--border-primary)'};
+                                border-radius: 6px;
+                                cursor: pointer;
+                                transition: all 0.2s;
+                                ${isSelected ? 'box-shadow: 0 0 0 3px var(--accent-alpha-15);' : ''}
+                            "
+                            onmouseover="this.style.background = '${isSelected ? 'var(--accent-alpha-25)' : 'var(--bg-hover)'}'; this.style.borderColor = 'var(--accent-primary)'; this.style.transform = 'translateY(-2px)';"
+                            onmouseout="this.style.background = '${isSelected ? 'var(--accent-alpha-20)' : 'var(--bg-tertiary)'}'; this.style.borderColor = '${isSelected ? 'var(--accent-primary)' : 'var(--border-primary)'}'; this.style.transform = 'translateY(0)';"
+                            onclick="updateTokenIcon('${token.id}', '${preset.icon}'); renderHex(); return false;"
+                            title="${preset.name}"
+                        >
+                            <img 
+                                src="${preset.icon}" 
+                                style="
+                                    width: 32px; 
+                                    height: 32px; 
+                                    ${isSelected ? 'filter: drop-shadow(0 2px 4px var(--accent-primary));' : ''}
+                                " 
+                                alt="${preset.name}"
+                            />
+                            <span style="font-size: 10px; text-align: center; color: var(--text-secondary); line-height: 1.2;">${preset.name}</span>
+                        </button>
+                    `;
+                    }).join('')}
+                </div>
+                <button class="btn btn-secondary" type="button" style="width: 100%; margin-top: 8px;" onclick="clearTokenIcon('${token.id}'); return false;">Clear Icon (Use Label)</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Icon/Text Color</label>
+                <input type="color" class="form-input" value="${token.iconColor || '#FFFFFF'}" style="height: 50px; cursor: pointer;" onchange="updateTokenField('${token.id}', 'iconColor', this.value); renderHex();">
+                <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 6px;">
+                    💡 This colors the icon (if set) or the label text inside the circle
+                </div>
             </div>
             <div class="form-group">
                 <label class="form-label">Attributes (JSON)</label>
@@ -1889,6 +2126,68 @@ function updateTokenAttributes(tokenId, jsonText) {
     } catch (e) {
         alert('Invalid JSON format. Changes not saved.');
         document.getElementById(`tokenAttributes_${tokenId}`).value = JSON.stringify(token.attributes, null, 2);
+    }
+}
+
+function updateTokenIcon(tokenId, iconUrl) {
+    const token = getToken(tokenId);
+    if (token) {
+        // Store the base icon URL (without color parameter)
+        const baseUrl = iconUrl.split('?')[0];
+        
+        // Use the token's icon color (default to white if not set)
+        const iconColor = token.iconColor || '#FFFFFF';
+        const colorHex = iconColor.replace('#', '%23');
+        
+        // Create the icon URL with the icon color
+        const coloredIconUrl = `${baseUrl}?color=${colorHex}`;
+        
+        token.icon = coloredIconUrl;
+        
+        // Load the icon if it's a URL
+        if (coloredIconUrl) {
+            loadLandmarkIcon(coloredIconUrl).then(() => {
+                renderHex();
+            });
+        } else {
+            renderHex();
+        }
+        markUnsaved();
+    }
+}
+
+function updateTokenIconColor(tokenId, newColor) {
+    const token = getToken(tokenId);
+    if (token) {
+        // Store the icon color in the token
+        token.iconColor = newColor;
+        
+        if (token.icon) {
+            // Extract the base URL without color parameter
+            const baseUrl = token.icon.split('?')[0];
+            
+            // Apply the new color
+            const colorHex = newColor.replace('#', '%23');
+            const coloredIconUrl = `${baseUrl}?color=${colorHex}`;
+            
+            token.icon = coloredIconUrl;
+            
+            // Load the new colored icon
+            loadLandmarkIcon(coloredIconUrl).then(() => {
+                renderHex();
+            });
+        }
+        markUnsaved();
+    }
+}
+
+function clearTokenIcon(tokenId) {
+    const token = getToken(tokenId);
+    if (token) {
+        token.icon = null;
+        renderHex();
+        markUnsaved();
+        showTokenDetails(token);
     }
 }
 
@@ -2075,6 +2374,7 @@ function showLandmarkDetails(landmark) {
                         return `
                         <button 
                             class="btn" 
+                            type="button"
                             style="
                                 padding: 10px 6px; 
                                 display: flex; 
@@ -2090,7 +2390,7 @@ function showLandmarkDetails(landmark) {
                             "
                             onmouseover="this.style.background = '${isSelected ? 'var(--accent-alpha-25)' : 'var(--bg-hover)'}'; this.style.borderColor = 'var(--accent-primary)'; this.style.transform = 'translateY(-2px)';"
                             onmouseout="this.style.background = '${isSelected ? 'var(--accent-alpha-20)' : 'var(--bg-tertiary)'}'; this.style.borderColor = '${isSelected ? 'var(--accent-primary)' : 'var(--border-primary)'}'; this.style.transform = 'translateY(0)';"
-                            onclick="updateLandmarkIcon('${landmark.id}', '${preset.icon}', '${preset.color}'); renderHex();"
+                            onclick="event.preventDefault(); updateLandmarkIcon('${landmark.id}', '${preset.icon}', '${preset.color}'); renderHex(); return false;"
                             title="${preset.name}"
                         >
                             <img 
@@ -2120,8 +2420,9 @@ function showLandmarkDetails(landmark) {
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label">Color</label>
-                <input type="color" class="form-input" value="${landmark.color}" style="height: 50px; cursor: pointer;" onchange="updateLandmarkField('${landmark.id}', 'color', this.value); renderHex();">
+                <label class="form-label">Icon Color</label>
+                <input type="color" class="form-input" value="${landmark.color}" style="height: 50px; cursor: pointer;" onchange="updateLandmarkField('${landmark.id}', 'color', this.value); updateLandmarkIconColor('${landmark.id}'); renderHex();">
+                <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 6px;">💡 Choose the color for this landmark's icon</div>
             </div>
             <div class="form-group">
                 <label class="form-label">Size</label>
@@ -2135,6 +2436,15 @@ function showLandmarkDetails(landmark) {
                     <input type="checkbox" ${landmark.showLabel ? 'checked' : ''} onchange="updateLandmarkField('${landmark.id}', 'showLabel', this.checked); renderHex();" style="margin-right: 8px;">
                     Show Name Label
                 </label>
+            </div>
+            <div class="form-group">
+                <label class="form-label">
+                    <input type="checkbox" ${landmark.hideTerrainIcon !== false ? 'checked' : ''} onchange="updateLandmarkField('${landmark.id}', 'hideTerrainIcon', this.checked); renderHex();" style="margin-right: 8px;">
+                    Hide Terrain Icon
+                </label>
+                <div style="font-size: 11px; color: var(--text-tertiary); margin-top: 6px;">
+                    When enabled, the landmark icon replaces the hex's terrain icon
+                </div>
             </div>
             <div class="form-group">
                 <label class="form-label">Label Position</label>
@@ -2173,22 +2483,57 @@ function updateLandmarkField(landmarkId, field, value) {
 function updateLandmarkIcon(landmarkId, iconUrl, color) {
     const landmark = getLandmarkById(landmarkId);
     if (landmark) {
-        landmark.icon = iconUrl;
-        landmark.color = color;
-        loadLandmarkIcon(iconUrl).then(() => {
+        // Store the base icon URL (without color parameter)
+        const baseUrl = iconUrl.split('?')[0];
+        
+        // Use the landmark's current color for the icon
+        const colorHex = landmark.color.replace('#', '%23');
+        
+        // Create the icon URL with the landmark's color
+        const coloredIconUrl = `${baseUrl}?color=${colorHex}`;
+        
+        landmark.icon = coloredIconUrl;
+        
+        loadLandmarkIcon(coloredIconUrl).then(() => {
             renderHex();
         });
         markUnsaved();
-        // Refresh the details panel to show updated selection
-        showLandmarkDetails(landmark);
+        // Don't refresh to preserve scroll
     }
 }
 
 function updateLandmarkIconUrl(landmarkId, iconUrl) {
     const landmark = getLandmarkById(landmarkId);
     if (landmark) {
-        landmark.icon = iconUrl;
-        loadLandmarkIcon(iconUrl).then(() => {
+        // Apply current landmark color to the icon
+        const baseUrl = iconUrl.split('?')[0];
+        const colorHex = landmark.color.replace('#', '%23');
+        const coloredIconUrl = `${baseUrl}?color=${colorHex}`;
+        
+        landmark.icon = coloredIconUrl;
+        loadLandmarkIcon(coloredIconUrl).then(() => {
+            renderHex();
+        });
+        markUnsaved();
+    }
+}
+
+function updateLandmarkIconColor(landmarkId) {
+    const landmark = getLandmarkById(landmarkId);
+    if (landmark && landmark.icon) {
+        // Extract the base URL without color parameter
+        const baseUrl = landmark.icon.split('?')[0];
+        
+        // Get the landmark's new color and encode it for URL
+        const colorHex = landmark.color.replace('#', '%23');
+        
+        // Create the icon URL with the new color
+        const coloredIconUrl = `${baseUrl}?color=${colorHex}`;
+        
+        landmark.icon = coloredIconUrl;
+        
+        // Load the new colored icon
+        loadLandmarkIcon(coloredIconUrl).then(() => {
             renderHex();
         });
         markUnsaved();
@@ -2662,7 +3007,8 @@ async function loadLandmarkIcon(iconUrl) {
 async function preloadHexIcons() {
     const terrainPromises = Object.keys(TERRAINS).map(terrain => loadHexIcon(terrain));
     const landmarkPromises = Object.values(LANDMARK_ICONS).map(preset => loadLandmarkIcon(preset.icon));
-    await Promise.all([...terrainPromises, ...landmarkPromises]);
+    const tokenPromises = Object.values(TOKEN_ICONS).map(preset => loadLandmarkIcon(preset.icon));
+    await Promise.all([...terrainPromises, ...landmarkPromises, ...tokenPromises]);
     renderHex();
 }
 
@@ -2983,20 +3329,23 @@ function drawHexTile(hex) {
         ctx.lineWidth = 2;
         ctx.stroke();
         
-        // Draw normal terrain icon for basic pack
-        const icon = hexIconCache.get(hex.terrain);
-        if (icon && size > 15) {
-            const iconSize = size * 0.8;
-            ctx.drawImage(icon, x - iconSize/2, y - iconSize/2, iconSize, iconSize);
+        // Check if there's a landmark that wants to hide the terrain icon
+        const landmark = getLandmark(hex.q, hex.r);
+        const shouldHideTerrainIcon = landmark && landmark.hideTerrainIcon !== false;
+        
+        // Draw terrain icon for basic pack (unless a landmark is hiding it)
+        if (!shouldHideTerrainIcon) {
+            const icon = hexIconCache.get(hex.terrain);
+            if (icon && size > 15) {
+                const iconSize = size * 0.8;
+                ctx.drawImage(icon, x - iconSize/2, y - iconSize/2, iconSize, iconSize);
+            }
         }
     }
     
-    // Check if there's a landmark on this hex in 'icon' mode
+    // Draw landmark icon if it exists and is in 'icon' mode (regardless of hideTerrainIcon setting)
     const landmark = getLandmark(hex.q, hex.r);
-    
-    // Only replace hex icon if landmark is in 'icon' mode
     if (landmark && landmark.style === 'icon' && landmark.icon && size > 8) {
-        // Draw landmark icon instead of terrain icon
         const icon = landmarkIconCache.get(landmark.icon);
         if (icon) {
             const iconSize = size * 0.8 * (landmark.size || 1.0);
@@ -3043,6 +3392,8 @@ function drawToken(token) {
     const radius = Math.max(1, tokenSize / 2); // Ensure minimum radius of 1
     
     ctx.save();
+    
+    // Always draw the circle background first
     // Shadow
     ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.beginPath();
@@ -3058,6 +3409,66 @@ function drawToken(token) {
     ctx.lineWidth = Math.max(1, 2 * token.scale);
     ctx.stroke();
     
+    // If token has an icon, render it inside the circle with color filter
+    if (token.icon) {
+        const iconImg = landmarkIconCache.get(token.icon);
+        if (iconImg && iconImg.complete && iconImg.naturalHeight > 0) {
+            // Icon should be smaller than the circle (about 70% of diameter)
+            const iconSize = tokenSize * 0.7;
+            
+            // Create a circular clipping path to keep icon inside the circle
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(x, y, radius - 2, 0, Math.PI * 2);
+            ctx.clip();
+            
+            // Apply color filter if iconColor is set
+            if (token.iconColor && token.iconColor !== '#FFFFFF') {
+                // Create a temporary canvas to apply color filter
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = iconSize;
+                tempCanvas.height = iconSize;
+                const tempCtx = tempCanvas.getContext('2d');
+                
+                // Draw the original icon
+                tempCtx.drawImage(iconImg, 0, 0, iconSize, iconSize);
+                
+                // Apply color tint by filling with the color and using multiply blend mode
+                tempCtx.globalCompositeOperation = 'source-in';
+                tempCtx.fillStyle = token.iconColor;
+                tempCtx.fillRect(0, 0, iconSize, iconSize);
+                
+                // Draw the colored icon
+                ctx.drawImage(
+                    tempCanvas,
+                    x - iconSize / 2,
+                    y - iconSize / 2
+                );
+            } else {
+                // Draw icon centered in the circle without color change
+                ctx.drawImage(
+                    iconImg,
+                    x - iconSize / 2,
+                    y - iconSize / 2,
+                    iconSize,
+                    iconSize
+                );
+            }
+            
+            ctx.restore();
+        } else {
+            // Icon not loaded yet, show label as fallback
+            drawTokenLabel(token, x, y, tokenSize);
+        }
+    } else {
+        // No icon, show the label
+        drawTokenLabel(token, x, y, tokenSize);
+    }
+    
+    ctx.restore();
+}
+
+function drawTokenLabel(token, x, y, tokenSize) {
     // Display text based on size
     let displayText = token.label;
     if (token.size < 0.8) {
@@ -3075,7 +3486,8 @@ function drawToken(token) {
     
     // Only render text if token is large enough
     if (tokenSize > 10) {
-        ctx.fillStyle = '#ffffff';
+        // Use iconColor for text if set, otherwise default to white
+        ctx.fillStyle = token.iconColor || '#ffffff';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         const fontSize = Math.max(10, tokenSize * 0.35);
@@ -3086,7 +3498,6 @@ function drawToken(token) {
         ctx.shadowOffsetY = 1;
         ctx.fillText(displayText, x, y);
     }
-    ctx.restore();
 }
 
 function drawLandmark(landmark) {
@@ -3616,17 +4027,29 @@ function handlePointerDown(x, y, button, isTouch, shiftKey = false, detail = 1) 
         // Token mode
         if (state.hexMap.mode === 'token') {
             const clickedToken = findTokenAtPixel(canvasX, canvasY);
-            if (clickedToken && !shiftKey) {
-                state.hexMap.draggingToken = clickedToken;
-                animateTokenScale(clickedToken.id, 1.3, 150);
-                canvas.style.cursor = 'grabbing';
+            if (clickedToken) {
+                // Clicking an existing token: select and edit it
+                state.hexMap.selectedToken = clickedToken;
+                state.hexMap.selectedHex = null;
+                state.hexMap.selectedLandmark = null;
+                
+                if (!shiftKey) {
+                    // Start dragging
+                    state.hexMap.draggingToken = clickedToken;
+                    animateTokenScale(clickedToken.id, 1.3, 150);
+                    canvas.style.cursor = 'grabbing';
+                }
+                
+                showTokenDetails(clickedToken);
+                renderHex();
             } else if (!shiftKey) {
-                // Direct placement with default values
+                // Clicking empty hex: create new token with default values
                 const defaultToken = {
                     name: 'New Token',
                     type: 'player',
                     label: 'T',
                     color: '#FF6B6B',
+                    iconColor: '#FFFFFF',
                     size: 1.0,
                     attributes: {},
                     notes: ''
@@ -3653,15 +4076,15 @@ function handlePointerDown(x, y, button, isTouch, shiftKey = false, detail = 1) 
         // Landmark mode
         if (state.hexMap.mode === 'landmark') {
             const clickedLandmark = findLandmarkAtPixel(canvasX, canvasY);
-            if (clickedLandmark && !shiftKey) {
-                // Select existing landmark
+            if (clickedLandmark) {
+                // Clicking an existing landmark: select and edit it
                 state.hexMap.selectedLandmark = clickedLandmark;
                 state.hexMap.selectedHex = null;
                 state.hexMap.selectedToken = null;
                 showLandmarkDetails(clickedLandmark);
                 renderHex();
             } else if (!shiftKey) {
-                // Direct placement with default values
+                // Clicking empty hex: create new landmark with default values
                 const defaultLandmark = {
                     name: 'New Landmark',
                     style: 'icon',  // Icon mode to replace hex icon
@@ -3669,7 +4092,7 @@ function handlePointerDown(x, y, button, isTouch, shiftKey = false, detail = 1) 
                     color: '#8B7355',
                     size: 1.0,
                     showLabel: false,  // No label by default
-                    labelPosition: 'bottom',
+                    labelPosition: 'below',
                     attributes: {},
                     notes: ''
                 };
@@ -4103,6 +4526,45 @@ document.addEventListener('keydown', (e) => {
                    document.activeElement.isContentEditable;
     
     if (isTyping) return;
+    
+    // Delete key handling
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault(); // Prevent browser back navigation
+        
+        // Delete selected token
+        if (state.hexMap.selectedToken) {
+            const tokenId = state.hexMap.selectedToken.id;
+            deleteToken(tokenId);
+            state.hexMap.selectedToken = null;
+            deselectHex();
+            renderHex();
+            updateUI();
+            return;
+        }
+        
+        // Delete selected landmark
+        if (state.hexMap.selectedLandmark) {
+            const landmarkId = state.hexMap.selectedLandmark.id;
+            deleteLandmarkById(landmarkId);
+            state.hexMap.selectedLandmark = null;
+            deselectHex();
+            renderHex();
+            updateUI();
+            return;
+        }
+        
+        // Delete selected path
+        if (state.hexMap.selectedPath) {
+            const pathId = state.hexMap.selectedPath.id;
+            deletePath(pathId);
+            state.hexMap.selectedPath = null;
+            state.hexMap.pathEditMode = false;
+            deselectHex();
+            renderHex();
+            updateUI();
+            return;
+        }
+    }
     
     if (e.key === 'Escape') {
         if (state.hexMap.currentPath) {
@@ -5431,17 +5893,18 @@ function importHexMap() {
                     const canvasWidth = canvas.width;
                     const canvasHeight = canvas.height;
                     
-                    // Calculate zoom to fit map with some padding
-                    const scaleX = (canvasWidth * 0.8) / mapWidth;
-                    const scaleY = (canvasHeight * 0.8) / mapHeight;
-                    const fitScale = Math.min(scaleX, scaleY, 2); // Cap at 2x zoom
+                    // Calculate zoom to fit map with reasonable constraints
+                    const scaleX = (canvasWidth * 0.7) / mapWidth;
+                    const scaleY = (canvasHeight * 0.7) / mapHeight;
+                    // Clamp zoom between 0.3 (min) and 1.5 (max) for better UX
+                    const fitScale = Math.max(0.3, Math.min(scaleX, scaleY, 1.5));
                     
                     // Set viewport to center on map
                     state.hexMap.viewport.offsetX = -centerX * fitScale + canvasWidth / 2;
                     state.hexMap.viewport.offsetY = -centerY * fitScale + canvasHeight / 2;
                     state.hexMap.viewport.scale = fitScale;
                     
-                    console.log(`Auto-centered viewport on imported map (${count} hexes)`);
+                    console.log(`Auto-centered viewport on imported map (${count} hexes, scale=${fitScale.toFixed(2)})`);
                 }
             }
             
@@ -5514,46 +5977,243 @@ function clearHexMap() {
     }
 }
 
-function createStarterMap() {
-    state.hexMap.hexes.clear();
-    state.hexMap.tokens.clear();
-    state.hexMap.paths = [];
-    state.hexMap.selectedHex = null;
-    state.hexMap.selectedToken = null;
-    state.hexMap.currentPath = null;
+async function createStarterMap(loadExample = true) {
+    // If user explicitly chose blank map, create empty map
+    if (!loadExample) {
+        console.log('Creating blank starter map...');
+        state.hexMap.hexes.clear();
+        state.hexMap.tokens.clear();
+        state.hexMap.landmarks.clear();
+        state.hexMap.paths = [];
+        state.hexMap.selectedHex = null;
+        state.hexMap.selectedToken = null;
+        state.hexMap.selectedLandmark = null;
+        state.hexMap.currentPath = null;
+        
+        // Just clear and render - no hexes added
+        updateHexCount();
+        deselectHex();
+        renderHex();
+        return;
+    }
     
-    const mapWidth = 10;
-    const mapHeight = 10;
-    
-    for (let col = 0; col < mapWidth; col++) {
-        for (let row = 0; row < mapHeight; row++) {
-            const q = col - Math.floor(mapWidth / 2);
-            const r = row - Math.floor(mapHeight / 2) - Math.floor(col / 2);
+    // Load the Fablewoods example map as the default starting map
+    try {
+        const response = await fetch('Fablewoods.json');
+        const data = await response.json();
+        
+        console.log('Loading Fablewoods example map...');
+        
+        // Convert old object format to new array format if needed
+        if (data.hexes && typeof data.hexes === 'object' && !Array.isArray(data.hexes)) {
+            data.hexes = Object.values(data.hexes);
+        }
+        
+        if (data.tokens && typeof data.tokens === 'object' && !Array.isArray(data.tokens)) {
+            data.tokens = Object.values(data.tokens);
+        }
+        
+        if (data.landmarks && typeof data.landmarks === 'object' && !Array.isArray(data.landmarks)) {
+            data.landmarks = Object.values(data.landmarks);
+        }
+        
+        // Clear existing data
+        state.hexMap.hexes.clear();
+        state.hexMap.landmarks.clear();
+        state.hexMap.tokens.clear();
+        state.hexMap.paths = [];
+        state.hexMap.selectedHex = null;
+        state.hexMap.selectedLandmark = null;
+        state.hexMap.selectedToken = null;
+        state.hexMap.currentPath = null;
+        
+        // Import hexes
+        data.hexes.forEach(hexData => {
+            const key = `${hexData.q},${hexData.r}`;
+            state.hexMap.hexes.set(key, {
+                q: hexData.q,
+                r: hexData.r,
+                terrain: hexData.terrain,
+                name: hexData.name || '',
+                description: hexData.description || ''
+            });
+        });
+        
+        // Import landmarks
+        if (data.landmarks && Array.isArray(data.landmarks)) {
+            data.landmarks.forEach(landmarkData => {
+                const key = `${landmarkData.q},${landmarkData.r}`;
+                state.hexMap.landmarks.set(key, {
+                    id: landmarkData.id,
+                    q: landmarkData.q,
+                    r: landmarkData.r,
+                    name: landmarkData.name,
+                    type: landmarkData.type || 'location',
+                    style: landmarkData.style || 'circle',
+                    icon: landmarkData.icon || '📍',
+                    color: landmarkData.color || '#ef4444',
+                    showLabel: landmarkData.showLabel !== false,
+                    labelPosition: landmarkData.labelPosition || 'above',
+                    size: landmarkData.size || 1.0,
+                    attributes: landmarkData.attributes || {},
+                    notes: landmarkData.notes || '',
+                    visible: landmarkData.visible !== false,
+                    created: landmarkData.created
+                });
+                if (landmarkData.id) {
+                    const idNum = parseInt(landmarkData.id.split('_')[1] || '0');
+                    if (!isNaN(idNum) && idNum >= state.nextLandmarkId) {
+                        state.nextLandmarkId = idNum + 1;
+                    }
+                }
+            });
+        }
+        
+        // Import tokens
+        if (data.tokens && Array.isArray(data.tokens)) {
+            data.tokens.forEach(tokenData => {
+                state.hexMap.tokens.set(tokenData.id, {
+                    id: tokenData.id,
+                    q: tokenData.q,
+                    r: tokenData.r,
+                    name: tokenData.name,
+                    type: tokenData.type || 'player',
+                    color: tokenData.color || '#667eea',
+                    label: tokenData.label || tokenData.name,
+                    size: tokenData.size || 1.0,
+                    attributes: tokenData.attributes || {},
+                    notes: tokenData.notes || '',
+                    visible: tokenData.visible !== false,
+                    scale: tokenData.scale || 1,
+                    created: tokenData.created
+                });
+                if (tokenData.id) {
+                    const idNum = parseInt(tokenData.id.split('_')[1] || '0');
+                    if (!isNaN(idNum) && idNum >= state.nextTokenId) {
+                        state.nextTokenId = idNum + 1;
+                    }
+                }
+            });
+        }
+        
+        // Import paths
+        if (data.paths && Array.isArray(data.paths)) {
+            data.paths.forEach(pathData => {
+                state.hexMap.paths.push({
+                    id: pathData.id,
+                    type: pathData.type,
+                    style: pathData.style,
+                    width: pathData.width,
+                    color: pathData.color || PATH_STYLES[pathData.type].color,
+                    points: pathData.points,
+                    created: pathData.created
+                });
+                if (pathData.id) {
+                    const idNum = parseInt(pathData.id.split('_')[1] || '0');
+                    if (!isNaN(idNum) && idNum >= state.nextPathId) {
+                        state.nextPathId = idNum + 1;
+                    }
+                }
+            });
+        }
+        
+        // Auto-center viewport on the map
+        let sumX = 0, sumY = 0, count = 0;
+        data.hexes.forEach(hex => {
+            const size = state.hexMap.hexSize;
+            const x = size * (3/2 * hex.q);
+            const y = size * (Math.sqrt(3)/2 * hex.q + Math.sqrt(3) * hex.r);
+            sumX += x;
+            sumY += y;
+            count++;
+        });
+        
+        if (count > 0) {
+            const centerX = sumX / count;
+            const centerY = sumY / count;
             
-            let terrain;
-            const centerQ = 0;
-            const centerR = 0;
-            const distance = Math.sqrt((q - centerQ) ** 2 + (r - centerR) ** 2);
+            // Calculate appropriate zoom level
+            let minX = Infinity, maxX = -Infinity;
+            let minY = Infinity, maxY = -Infinity;
+            data.hexes.forEach(hex => {
+                const size = state.hexMap.hexSize;
+                const x = size * (3/2 * hex.q);
+                const y = size * (Math.sqrt(3)/2 * hex.q + Math.sqrt(3) * hex.r);
+                minX = Math.min(minX, x);
+                maxX = Math.max(maxX, x);
+                minY = Math.min(minY, y);
+                maxY = Math.max(maxY, y);
+            });
             
-            if (distance < 2) {
-                terrain = 'grassland';
-            } else if (distance < 3) {
-                terrain = Math.random() > 0.5 ? 'plains' : 'forest';
-            } else if (distance < 4) {
-                terrain = Math.random() > 0.7 ? 'hills' : 'forest';
-            } else if (distance < 5) {
-                const rand = Math.random();
-                if (rand > 0.7) terrain = 'mountain';
-                else if (rand > 0.4) terrain = 'hills';
-                else terrain = 'forest';
-            } else {
-                const rand = Math.random();
-                if (rand > 0.8) terrain = 'mountain';
-                else if (rand > 0.6) terrain = 'water';
-                else if (rand > 0.4) terrain = 'desert';
-                else terrain = 'tundra';
+            const mapWidth = maxX - minX;
+            const mapHeight = maxY - minY;
+            const canvasElement = document.getElementById('hexCanvas');
+            const canvasWidth = canvasElement.width;
+            const canvasHeight = canvasElement.height;
+            
+            // Calculate zoom to fit map with reasonable constraints
+            const scaleX = (canvasWidth * 0.7) / mapWidth;
+            const scaleY = (canvasHeight * 0.7) / mapHeight;
+            // Clamp zoom between 0.3 (min) and 1.5 (max) for better UX
+            const fitScale = Math.max(0.3, Math.min(scaleX, scaleY, 1.5));
+            
+            state.hexMap.viewport.offsetX = -centerX * fitScale + canvasWidth / 2;
+            state.hexMap.viewport.offsetY = -centerY * fitScale + canvasHeight / 2;
+            state.hexMap.viewport.scale = fitScale;
+            
+            console.log(`Viewport set: scale=${fitScale.toFixed(2)}, center=(${centerX.toFixed(1)}, ${centerY.toFixed(1)})`);
+        }
+        
+        // Force bounds recalculation
+        state.hexMap.boundsNeedRecalc = true;
+        minimapBoundsDirty = true;
+        minimapDirty = true;
+        
+        console.log('Fablewoods example map loaded successfully!');
+        
+    } catch (error) {
+        console.error('Failed to load Fablewoods.json, creating simple starter map instead:', error);
+        // Fallback to simple starter map if loading fails
+        state.hexMap.hexes.clear();
+        state.hexMap.tokens.clear();
+        state.hexMap.paths = [];
+        state.hexMap.selectedHex = null;
+        state.hexMap.selectedToken = null;
+        state.hexMap.currentPath = null;
+        
+        const mapWidth = 10;
+        const mapHeight = 10;
+        
+        for (let col = 0; col < mapWidth; col++) {
+            for (let row = 0; row < mapHeight; row++) {
+                const q = col - Math.floor(mapWidth / 2);
+                const r = row - Math.floor(mapHeight / 2) - Math.floor(col / 2);
+                
+                let terrain;
+                const centerQ = 0;
+                const centerR = 0;
+                const distance = Math.sqrt((q - centerQ) ** 2 + (r - centerR) ** 2);
+                
+                if (distance < 2) {
+                    terrain = 'grassland';
+                } else if (distance < 3) {
+                    terrain = Math.random() > 0.5 ? 'plains' : 'forest';
+                } else if (distance < 4) {
+                    terrain = Math.random() > 0.7 ? 'hills' : 'forest';
+                } else if (distance < 5) {
+                    const rand = Math.random();
+                    if (rand > 0.7) terrain = 'mountain';
+                    else if (rand > 0.4) terrain = 'hills';
+                    else terrain = 'forest';
+                } else {
+                    const rand = Math.random();
+                    if (rand > 0.8) terrain = 'mountain';
+                    else if (rand > 0.6) terrain = 'water';
+                    else if (rand > 0.4) terrain = 'desert';
+                    else terrain = 'tundra';
+                }
+                setHex(q, r, terrain);
             }
-            setHex(q, r, terrain);
         }
     }
     
@@ -5650,6 +6310,8 @@ function saveMapToCache() {
                 name: token.name,
                 type: token.type,
                 color: token.color,
+                iconColor: token.iconColor,
+                icon: token.icon,
                 label: token.label,
                 size: token.size,
                 attributes: token.attributes,
@@ -5867,6 +6529,8 @@ async function restoreMapFromCache() {
                     name: tokenData.name,
                     type: tokenData.type,
                     color: tokenData.color,
+                    iconColor: tokenData.iconColor || '#FFFFFF',
+                    icon: tokenData.icon || null,
                     label: tokenData.label,
                     size: tokenData.size,
                     attributes: tokenData.attributes || {},
@@ -5959,9 +6623,11 @@ async function init() {
         // Try to restore from cache
         const restored = await restoreMapFromCache();
         
-        // If no cached data, create starter map
+        // If no cached data, DON'T create starter map yet
+        // Let the tutorial handle it based on user choice
         if (!restored) {
-            createStarterMap();
+            console.log('No cached map found - waiting for user to choose map type in tutorial');
+            window.waitingForMapChoice = true;
         }
         
         // Start auto-save
@@ -5970,7 +6636,7 @@ async function init() {
     } catch (error) {
         console.error('Database initialization failed:', error);
         // Fallback to starter map if database fails
-        createStarterMap();
+        await createStarterMap(true);
     }
     
     preloadHexIcons();
@@ -8404,3 +9070,395 @@ renderHex = function() {
 };
 
 console.log('✅ Mobile UI integration hooks installed');
+
+// ============================================================================
+// WELCOME TUTORIAL SYSTEM
+// ============================================================================
+
+const WELCOME_STEPS = [
+    {
+        title: '👋 Welcome to HexWorld!',
+        subtitle: 'Your browser-based hex map editor for tabletop RPG campaigns',
+        description: 'HexWorld is a powerful map editor perfect for game masters and world builders. Let\'s get you started with your first map!',
+        isChoiceStep: true,
+        choices: [
+            {
+                id: 'example',
+                icon: '🗺️',
+                title: 'Load Example Map',
+                subtitle: 'Explore the Fablewoods',
+                description: 'Start with a complete fantasy realm featuring forests, mountains, towns, and roads. Perfect for learning the tools and getting inspired!',
+                features: ['2000+ painted hexes', 'Towns and settlements', 'Road networks', 'Ready to explore and edit']
+            },
+            {
+                id: 'blank',
+                icon: '✨',
+                title: 'Start Fresh',
+                subtitle: 'Create from scratch',
+                description: 'Begin with a blank canvas and build your world from the ground up. Ideal if you have a clear vision and want full creative control.',
+                features: ['Empty canvas', 'Full creative freedom', 'Paint your vision', 'No constraints']
+            }
+        ]
+    },
+    {
+        title: '🎨 What is HexWorld?',
+        subtitle: 'A complete toolkit for campaign mapping',
+        description: 'HexWorld gives you everything you need to design, track, and share your campaign worlds. All in your browser, no installation required.',
+        features: [
+            {
+                icon: '🎨',
+                title: 'Paint Terrain',
+                description: 'Choose from 10+ terrain types and paint your world with intuitive tools'
+            },
+            {
+                icon: '🎭',
+                title: 'Add Tokens',
+                description: 'Place characters, monsters, and markers to track your campaign'
+            },
+            {
+                icon: '🛤️',
+                title: 'Draw Paths',
+                description: 'Create roads, rivers, and trails connecting your locations'
+            },
+            {
+                icon: '📍',
+                title: 'Mark Landmarks',
+                description: 'Add towns, dungeons, and points of interest with custom icons'
+            }
+        ]
+    },
+    {
+        title: '🖌️ Paint Your World',
+        subtitle: 'The basics of terrain painting',
+        description: 'Select a terrain type from the palette on the left and start painting. You can paint individual hexes or drag to paint multiple hexes at once.',
+        tips: [
+            { icon: '👆', text: 'Click to paint single hexes' },
+            { icon: '🖱️', text: 'Click and drag to paint multiple hexes quickly' },
+            { icon: '⌨️', text: 'Use keys 1-5 to change brush size on the fly' },
+            { icon: '🪣', text: 'Try Fill Mode to paint large connected areas instantly' },
+            { icon: '🎨', text: 'Select "Clear Hex" to remove terrain from hexes' }
+        ]
+    },
+    {
+        title: '🎭 Characters & Tokens',
+        subtitle: 'Track your party and NPCs',
+        description: 'Tokens represent characters, monsters, towns, or any markers you need on your map. You can customize their appearance, move them around, and add notes.',
+        tips: [
+            { icon: '➕', text: 'Click "Token Mode" then "New Token" to create a token' },
+            { icon: '👆', text: 'Click a hex to place your token' },
+            { icon: '🖱️', text: 'Drag tokens to move them around the map' },
+            { icon: '✏️', text: 'Click a token to edit its name, color, and notes' },
+            { icon: '👁️', text: 'Toggle token visibility to hide/show them' }
+        ]
+    },
+    {
+        title: '🗺️ Navigation & Controls',
+        subtitle: 'Master the interface',
+        shortcuts: [
+            { label: 'Pan the map', keys: ['Right Click + Drag'] },
+            { label: 'Zoom in/out', keys: ['Mouse Wheel'] },
+            { label: 'Cancel action', keys: ['ESC'] },
+            { label: 'Undo', keys: ['Ctrl', 'Z'] },
+            { label: 'Redo', keys: ['Ctrl', 'Shift', 'Z'] },
+            { label: 'Brush size', keys: ['1', '2', '3', '4', '5'] }
+        ],
+        tips: [
+            { icon: '🔍', text: 'Use the minimap (bottom-right) to navigate large maps' },
+            { icon: '💾', text: 'Your work is auto-saved every 3 seconds' },
+            { icon: '📤', text: 'Export your map as JSON to back it up or share it' }
+        ]
+    },
+    {
+        title: '✨ You\'re Ready!',
+        subtitle: 'Start creating your campaign world',
+        description: 'You now have everything you need to build amazing hex maps. Remember, all your work is automatically saved, and you can always export your maps to keep them safe.',
+        tips: [
+            { icon: '✏️', text: 'Use File → New Map anytime to start a fresh project' },
+            { icon: '📚', text: 'Hover over tools for quick tips and reminders' },
+            { icon: '💡', text: 'Use Help → Reset Tutorial to see this guide again' },
+            { icon: '🎮', text: 'Check File → Example Maps to load pre-made worlds' },
+            { icon: '❤️', text: 'Have fun and create something amazing!' }
+        ]
+    }
+];
+
+class WelcomeTutorial {
+    constructor() {
+        this.currentStep = 0;
+        this.totalSteps = WELCOME_STEPS.length;
+        this.modal = null;
+        this.hasSeenWelcome = this.checkIfSeen();
+    }
+
+    checkIfSeen() {
+        try {
+            return localStorage.getItem('hexworld_welcome_seen') === 'true';
+        } catch (e) {
+            return false;
+        }
+    }
+
+    markAsSeen() {
+        try {
+            localStorage.setItem('hexworld_welcome_seen', 'true');
+        } catch (e) {
+            console.error('Failed to save welcome state');
+        }
+    }
+
+    show() {
+        if (this.hasSeenWelcome) return;
+
+        this.modal = document.getElementById('welcomeModal');
+        if (!this.modal) {
+            console.error('Welcome modal not found in DOM');
+            return;
+        }
+
+        this.modal.style.display = 'flex';
+        this.setupEventListeners();
+        this.renderStep(0);
+        this.updateProgress();
+    }
+
+    setupEventListeners() {
+        // Skip button
+        document.getElementById('welcomeSkipBtn').onclick = () => this.skip();
+        
+        // Back button
+        document.getElementById('welcomeBackBtn').onclick = () => this.prevStep();
+        
+        // Next button
+        document.getElementById('welcomeNextBtn').onclick = () => this.nextStep();
+        
+        // Start button
+        document.getElementById('welcomeStartBtn').onclick = () => this.complete();
+        
+        // Prevent closing on overlay click during tutorial
+        // (User must use Skip or complete the tutorial)
+    }
+
+    renderStep(stepIndex) {
+        const step = WELCOME_STEPS[stepIndex];
+        const container = document.getElementById('welcomeStepContent');
+        
+        let html = `
+            <div class="welcome-step active">
+                <div class="welcome-step-number">${stepIndex + 1}</div>
+                <h2 class="welcome-step-title">${step.title}</h2>
+                <p class="welcome-step-subtitle">${step.subtitle}</p>
+                <p class="welcome-step-description">${step.description}</p>
+        `;
+
+        // Choice screen (for map selection)
+        if (step.isChoiceStep && step.choices) {
+            html += '<div class="welcome-choices">';
+            step.choices.forEach(choice => {
+                html += `
+                    <div class="welcome-choice-card" data-choice="${choice.id}">
+                        <div class="welcome-choice-icon">${choice.icon}</div>
+                        <h3 class="welcome-choice-title">${choice.title}</h3>
+                        <p class="welcome-choice-subtitle">${choice.subtitle}</p>
+                        <p class="welcome-choice-description">${choice.description}</p>
+                        <ul class="welcome-choice-features">
+                            ${choice.features.map(f => `<li>✓ ${f}</li>`).join('')}
+                        </ul>
+                        <button class="welcome-choice-btn" data-choice="${choice.id}">
+                            ${choice.id === 'example' ? 'Load Fablewoods' : 'Start Blank'}
+                        </button>
+                    </div>
+                `;
+            });
+            html += '</div>';
+        }
+
+        // Features grid
+        if (step.features) {
+            html += '<div class="welcome-features">';
+            step.features.forEach(feature => {
+                html += `
+                    <div class="welcome-feature">
+                        <div class="welcome-feature-icon">${feature.icon}</div>
+                        <h3 class="welcome-feature-title">${feature.title}</h3>
+                        <p class="welcome-feature-description">${feature.description}</p>
+                    </div>
+                `;
+            });
+            html += '</div>';
+        }
+
+        // Tips list
+        if (step.tips) {
+            html += '<ul class="welcome-tips">';
+            step.tips.forEach(tip => {
+                html += `
+                    <li class="welcome-tip">
+                        <div class="welcome-tip-icon">${tip.icon}</div>
+                        <div class="welcome-tip-text">${tip.text}</div>
+                    </li>
+                `;
+            });
+            html += '</ul>';
+        }
+
+        // Keyboard shortcuts
+        if (step.shortcuts) {
+            html += '<div class="welcome-shortcuts">';
+            step.shortcuts.forEach(shortcut => {
+                html += `
+                    <div class="welcome-shortcut">
+                        <span class="welcome-shortcut-label">${shortcut.label}</span>
+                        <div class="welcome-shortcut-keys">
+                            ${shortcut.keys.map(key => `<kbd class="welcome-key">${key}</kbd>`).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+        }
+
+        html += '</div>';
+        
+        container.innerHTML = html;
+        this.currentStep = stepIndex;
+        
+        // Add event listeners for choice buttons
+        if (step.isChoiceStep) {
+            const choiceButtons = container.querySelectorAll('.welcome-choice-btn');
+            choiceButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const choice = e.target.dataset.choice;
+                    this.handleMapChoice(choice);
+                });
+            });
+        }
+        
+        this.updateButtons();
+    }
+
+    async handleMapChoice(choice) {
+        // Store the user's choice
+        this.selectedMapType = choice;
+        
+        // Load the appropriate map immediately
+        if (choice === 'example') {
+            console.log('User chose: Load Fablewoods example map');
+            await createStarterMap(true);
+        } else {
+            console.log('User chose: Start with blank map');
+            await createStarterMap(false);
+        }
+        
+        // Mark that map has been loaded
+        window.waitingForMapChoice = false;
+        
+        // Move to next step
+        this.nextStep();
+    }
+
+    updateButtons() {
+        const backBtn = document.getElementById('welcomeBackBtn');
+        const nextBtn = document.getElementById('welcomeNextBtn');
+        const startBtn = document.getElementById('welcomeStartBtn');
+        const skipBtn = document.getElementById('welcomeSkipBtn');
+
+        // Check if current step is the choice step
+        const isChoiceStep = WELCOME_STEPS[this.currentStep].isChoiceStep;
+
+        // Hide skip button on choice screen (user must make a choice)
+        if (isChoiceStep) {
+            skipBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+            backBtn.style.display = 'none';
+        } else {
+            skipBtn.style.display = 'flex';
+            
+            // Show/hide back button
+            if (this.currentStep === 0) {
+                backBtn.style.display = 'none';
+            } else {
+                backBtn.style.display = 'flex';
+            }
+
+            // Show/hide next vs start button
+            if (this.currentStep === this.totalSteps - 1) {
+                nextBtn.style.display = 'none';
+                startBtn.style.display = 'flex';
+            } else {
+                nextBtn.style.display = 'flex';
+                startBtn.style.display = 'none';
+            }
+        }
+    }
+
+    updateProgress() {
+        const progress = document.getElementById('welcomeProgress');
+        const percentage = ((this.currentStep + 1) / this.totalSteps) * 100;
+        progress.style.width = `${percentage}%`;
+    }
+
+    nextStep() {
+        if (this.currentStep < this.totalSteps - 1) {
+            this.renderStep(this.currentStep + 1);
+            this.updateProgress();
+        }
+    }
+
+    prevStep() {
+        if (this.currentStep > 0) {
+            this.renderStep(this.currentStep - 1);
+            this.updateProgress();
+        }
+    }
+
+    skip() {
+        if (confirm('Skip the tutorial? You can always access help from the Help menu later.')) {
+            this.close();
+        }
+    }
+
+    complete() {
+        this.close();
+    }
+
+    close() {
+        this.markAsSeen();
+        if (this.modal) {
+            this.modal.style.display = 'none';
+        }
+    }
+
+    reset() {
+        try {
+            localStorage.removeItem('hexworld_welcome_seen');
+            this.hasSeenWelcome = false;
+            alert('Welcome tutorial has been reset! It will show on your next visit.');
+        } catch (e) {
+            console.error('Failed to reset welcome tutorial');
+        }
+    }
+}
+
+// Initialize welcome tutorial
+const welcomeTutorial = new WelcomeTutorial();
+
+// Show welcome tutorial after a brief delay (to let the map load first)
+setTimeout(() => {
+    welcomeTutorial.show();
+}, 1500);
+
+// Add reset function to window for menu access
+window.resetWelcomeTutorial = () => {
+    welcomeTutorial.reset();
+};
+
+// Update the resetTooltips function to also mention the welcome tutorial
+const originalResetTooltips = window.resetTooltips;
+window.resetTooltips = function() {
+    if (typeof tooltipManager !== 'undefined') {
+        tooltipManager.resetAllTooltips();
+    }
+    // Don't automatically reset welcome tutorial, let them do it separately
+};
+
+console.log('✅ Welcome tutorial system initialized');
